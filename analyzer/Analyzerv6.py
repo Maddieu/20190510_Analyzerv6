@@ -644,6 +644,27 @@ class Doanalysis(object):
 
         return monofilecontent
 
+    def readmonofile2(self, workingdirectorypath, datafoldername):
+        os.chdir(workingdirectorypath)
+
+        with open(datafoldername + '_Mono.txt', 'r', encoding="cp1252") as file:
+            content = []
+            for line in file:
+                if line == '# LEGEND\n':
+                    content = file.readlines()
+            monofilecontent = []
+            i = 0
+            for elementline in content:
+                if elementline.startswith('#'):
+                    pass
+                else:
+                    monofilecontent.append([])
+                    for elementdata in elementline.split('\t'):
+                        monofilecontent[i].append(elementdata)
+                    i = i + 1
+
+        return monofilecontent
+
     def readbackground(self, workingdirectorypath, datafoldername, analysisfolderpath):
 
         with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
@@ -888,7 +909,9 @@ class Doanalysis(object):
         for line in range(monofilecontent.__len__()):
             photocurrent.append(float(monofilecontent[line][5]))
             photonenergy.append(float(monofilecontent[line][3]))
-        # print('photocurrent:', photocurrent)
+
+        #print('photocurrent:', photocurrent)
+
         for i in range(photocurrent.__len__()):
             j = 0
             while photonenergy[i] > GaAsPhotodiode[0][j]:
@@ -899,27 +922,36 @@ class Doanalysis(object):
 
             quantenausbeute = GaAsPhotodiode[1][j - 1] + ratio * (GaAsPhotodiode[1][j] - GaAsPhotodiode[1][j - 1])
             photonflux.append(photocurrent[i] / (quantenausbeute * 1.602e-19))
-            # print(photonenergy[i], lowerlimit, ratio, quantenausbeute, photonflux[i], sep="\t\t")
+            #print(photonenergy[i], lowerlimit, ratio, quantenausbeute, photonflux[i], sep="\t\t")
 
-        # print(photonflux)
+        #print(photonflux)
         photonfluxnorm = []
         average = 0
         for k in range(photonflux.__len__()):
             average = average + photonflux[k]
         average = average / photonflux.__len__()
-        # print('average is:', average)
+        #print('average is:', average)
         for i in range(photonflux.__len__()):
             photonfluxnorm.append(photonflux[i] / average)
-            # print(photonflux[i], photonfluxnorm[i], sep="\t\t")
-            # print(photonenergy[i], photocurrent[i])
+            #print(photonflux[i], photonfluxnorm[i], sep="\t\t")
+            #print(photonenergy[i], photocurrent[i])
 
         normalizedspectrum = []
+        print('Spectrum Length:', spectrum.__len__())
+        #print('Spectrum complete:', spectrum)
+        print('Photonfluxnorm length:', photonfluxnorm.__len__())
+        print('photonflux length:', photonflux.__len__())
+        #print('photonflux first value:', photonflux[0])
+        #print('photonflux last value:', photonflux[-1])
+
         for peak in range(spectrum.__len__()):
+            print('Spectrum[peak] length:', spectrum[peak].__len__())
+
             normalizedspectrum.append([])
             for i in range(spectrum[peak].__len__()):
                 normalizedspectrum[peak].append(spectrum[peak][i] / photonfluxnorm[i])
-                # print(photonfluxnorm[i], spectrum[peak][i], normalizedspectrum[peak][i], normalizedspectrum[peak][i]/spectrum[peak][i], sep ="\t\t")
-
+                #print(photonfluxnorm[i], spectrum[peak][i], normalizedspectrum[peak][i], normalizedspectrum[peak][i]/spectrum[peak][i], sep ="\t\t")
+        print('spectrum successfully normalized. returning now')
         return normalizedspectrum
 
     def domasscalibration(self, currentmasschannels, masscalibparameters):
@@ -1408,7 +1440,7 @@ class Doanalysis(object):
 
         Logfile.writelog(Logfile, 'analysis folder created,\tnext step: read monofilecontent')
 
-        monofilecontent = self.readmonofile(self, workingdirectorypath, datafoldername, analysisfolderpath)
+        monofilecontent = self.readmonofile2(self, workingdirectorypath, datafoldername)
 
         Logfile.writelog(Logfile, 'monofilecontent read,\tnext step: read backgroundfile')
 
