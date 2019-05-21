@@ -1075,7 +1075,7 @@ class Doanalysis(object):
                 calibratedmass = self.domasscalibration(self, peaknumberchannels[i], masscalibparameters)
                 plt.annotate(s=calibratedmass,
                              xy=(photonenergy[spectrum[i].index(max(spectrum[i])) - 1], max(spectrum[i])))
-            plt.savefig(datafoldername + '_allspectra' + '.png')
+            plt.savefig(datafoldername + '_allspectra' + '.png', transparent=True)
             plt.clf()
             plt.close()
             gc.collect()
@@ -1108,7 +1108,7 @@ class Doanalysis(object):
             # plt.title(str(datafoldername + '_peak' + j + '.txt'))
             #calibratedmass = self.domasscalibration(self, peaknumberchannels[i], masscalibparameters)
             plt.title(datafoldername + '_summed' + '.txt')
-            plt.savefig('_' + datafoldername + '_summed' + '.png')
+            plt.savefig('_' + datafoldername + '_summed' + '.png', transparent=True)
             plt.clf()
             plt.close()
             del tempspec
@@ -1129,11 +1129,15 @@ class Doanalysis(object):
             for i in range(spectrum.__len__()):
                 plt.figure(figsize=(7, 4))
                 j = str(i).zfill(3)
-                plt.plot(photonenergy[0:spectrum[i].__len__()], spectrum[i])
+                colorcyclenumber = i
+                while colorcyclenumber > 9:
+                    colorcyclenumber = colorcyclenumber - 10
+
+                plt.plot(photonenergy[0:spectrum[i].__len__()], spectrum[i], color=f'C{colorcyclenumber}')
                 # plt.title(str(datafoldername + '_peak' + j + '.txt'))
                 calibratedmass = self.domasscalibration(self, peaknumberchannels[i], masscalibparameters)
                 plt.title(datafoldername + '_m' + calibratedmass + '.txt')
-                plt.savefig(datafoldername + '_m' + calibratedmass + '.png')
+                plt.savefig(datafoldername + '_m' + calibratedmass + '.png', transparent=True)
                 plt.clf()
                 plt.close()
                 gc.collect()
@@ -1172,7 +1176,7 @@ class Doanalysis(object):
 
                 plt.annotate(s=str(calibratedmass), xy=(peaknumberchannels[peak][0] - 100, max(tempmassspec) * 0.9))
 
-            plt.savefig('__summedmassspec.png', dpi=100)
+            plt.savefig('__summedmassspec.png', dpi=100, transparent=True)
             plt.clf()
             plt.close()
             gc.collect()
@@ -1206,7 +1210,7 @@ class Doanalysis(object):
                     plt.annotate(s=str(calibratedmass),
                                  xy=(peaknumberchannels[peak][0] - 100, max(tempmassspec) * 0.9))
 
-                plt.savefig('__summedmassspec_coarse.png', dpi=50)
+                plt.savefig('__summedmassspec_coarse.png', dpi=50, transparent=True)
                 plt.clf()
                 plt.close()
                 gc.collect()
@@ -1248,7 +1252,7 @@ class Doanalysis(object):
             # print(plotselectedpeakchannel)
             # print(plotselectedpeaksummedmassspec)
             # plt.show()
-            plt.savefig('_massspec_peak_identification.png', dpi=100)
+            plt.savefig('_massspec_peak_identification.png', dpi=100, transparent=True)
             plt.clf()
             plt.close()
             gc.collect()
@@ -1282,7 +1286,7 @@ class Doanalysis(object):
                 # print(plotselectedpeakchannel)
                 # print(plotselectedpeaksummedmassspec)
                 # plt.show()
-                plt.savefig('_massspec_peak_identification_coarse.png', dpi=50)
+                plt.savefig('_massspec_peak_identification_coarse.png', dpi=50, transparent=True)
                 plt.clf()
                 plt.close()
                 gc.collect()
@@ -1352,7 +1356,7 @@ class Doanalysis(object):
 
             print('plot Untergrund:\t\t next: save image as png')
 
-            plt.savefig('_massspec_Untergrund_area.png', dpi=100)
+            plt.savefig('_massspec_Untergrund_area.png', dpi=100, transparent=True)
 
             print('plot Untergrund:\t\t next: close plot')
 
@@ -1379,7 +1383,7 @@ class Doanalysis(object):
                           max(summedmassspec[untergrundlowerboundary:untergrundupperboundary])], color="red",
                          linestyle='--')
 
-                plt.savefig('_massspec_Untergrund_area_coarse.png', dpi=50)
+                plt.savefig('_massspec_Untergrund_area_coarse.png', dpi=50, transparent=True)
                 plt.clf()
                 plt.close()
                 gc.collect()
