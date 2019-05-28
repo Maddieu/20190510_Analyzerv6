@@ -12,7 +12,13 @@ import numpy as np
 import psutil
 import gc
 
-parentdirectorypath = "D:\\Messdaten\\2019_03_ESI_FeBpy\\20190321_MnAcac_Python\\MnAA_test"
+
+from Functions import readolddata
+
+#parentdirectorypath = "D:\\Messdaten\\2019_03_ESI_FeBpy\\20190321_MnAcac_Python\\MnAA_test"
+
+parentdirectorypath = "D:\\Messdaten\\2019_03_ESI_FeBpy\\20190321_MnAcac_Python\\OldData_test"
+
 
 #       For new installation:
 #               Import the following modules:
@@ -134,7 +140,7 @@ class Fenster(QWidget):
         self.exitbutton.setFixedSize(150, 50)
         self.exitbutton.clicked.connect(self.beenden)
 
-        self.labelfolderline = QLabel("Path to the single (_001, _002, _003, ...) data-folders", self)
+        self.labelfolderline = QLabel("Path to the single (_001, _002, _003, ...) data-folders. Have To be clean. No \"_output\" etc", self)
         self.labelfolderline.move(50, 35)
 
         self.folderline = QLineEdit(parentdirectorypath, self)
@@ -239,6 +245,10 @@ class Fenster(QWidget):
         self.linepeakbroadnesstolerance = QLineEdit(str(peakbroadnesstolerance), self)
         self.linepeakbroadnesstolerance.move(620, settingsareaheight + 120 - 3)
         self.linepeakbroadnesstolerance.setFixedSize(60, 20)
+
+        self.checkboxantiquefileformat = QCheckBox("Antique File Format? (2016)", self)
+        self.checkboxantiquefileformat.setChecked(False)
+        self.checkboxantiquefileformat.move(830, 10)
 
         #
         #
@@ -526,6 +536,12 @@ class Fenster(QWidget):
 
     def dotheanalysis(self):
 
+
+        if self.checkboxantiquefileformat.isChecked():
+            useoldfileformat = True
+        else:
+            useoldfileformat = False
+
         sleeptimebeforestart = int(self.lineeditsleeptimebeforestart.text())
         print('sleep time:', sleeptimebeforestart)
         if sleeptimebeforestart > 0:
@@ -563,7 +579,7 @@ class Fenster(QWidget):
             print(workingdirectorypath)
             try:
                 Doanalysis.dosomething(Doanalysis, workingdirectorypath, datafoldername, analysisfolderpath,
-                                       self.progressbarfolder, settingpackage)
+                                       self.progressbarfolder, settingpackage, useoldfileformat)
             except:
                 errorcode = sys.exc_info()
                 print("Unexpected error:", errorcode)
@@ -607,8 +623,9 @@ class Fenster(QWidget):
         print('Number of errors:', alluntergrundfilespresent)
 
 
-class Doanalysis(object):
+class Doanalysis():
     # class Doanalysis(QThread):
+
 
     def createanalysisfolder(self, workingdirectorypath, datafoldername, analysisfolderpath):
         print('Creating analysis folder...')
@@ -987,8 +1004,8 @@ class Doanalysis(object):
 
             for peak in range(spectrum.__len__()):
                 calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters)
-                with open(datafoldername + '_m' + calibratedmass + '_spec.txt', 'a') as file:
-                    print(datafoldername + '_m' + calibratedmass + '_spec.txt')
+                with open(datafoldername + '_m' + calibratedmass + '_singlespec.txt', 'a') as file:
+                    print(datafoldername + '_m' + calibratedmass + '_singlespec.txt')
                     # print(spectrum[peak])
                     file.write(
                         datafoldername + '_m' + calibratedmass + '_Energie' + '\t' + datafoldername + '_m' + calibratedmass + '_Normiert' + '\n')
@@ -1425,7 +1442,7 @@ class Doanalysis(object):
 
         return [masscalibfitparameters[0], masscalibfitparameters[1], masscalibfitparameters[2]]
 
-    def dosomething(self, workingdirectorypath, datafoldername, analysisfolderpath, progressbarfolder, settingpackage):
+    def dosomething(self, workingdirectorypath, datafoldername, analysisfolderpath, progressbarfolder, settingpackage, useoldfileformat):
 
         [datalengthlimit, thresholdfactor, minbroadnessofpeak, peakbroadnesstolerance,
          masscalib1mass, masscalib1time, masscalib2mass, masscalib2time,
@@ -1437,6 +1454,8 @@ class Doanalysis(object):
         print('settingpackage2:', settingpackage)
 
         Logfile.writelog(Logfile, 'start working in folder: ' + analysisfolderpath + '\\' + datafoldername)
+
+        Logfile.writelog(Logfile, "[datalengthlimit, thresholdfactor, minbroadnessofpeak, peakbroadnesstolerance, masscalib1mass, masscalib1time, masscalib2mass, masscalib2time, untergrundlowerboundary, untergrundupperboundary]" + str(settingpackage))
 
         Logfile.writelog(Logfile, 'analysis button pressed,\tnext step: createanalysis folder')
 
@@ -1452,9 +1471,25 @@ class Doanalysis(object):
 
         Logfile.writelog(Logfile, 'bg data read,\tnext step: big read data v2 procedure')
 
-        bgsubstrdatalist, summedmassspec = self.readrawdatav2(self, backgrounddata, workingdirectorypath,
+        #olddata = True
+
+        print('## HERE IT COMES: ##')
+        if useoldfileformat == True:
+            print('## READ OLD DATA ##')
+
+            backgrounddata = readolddata.readoldbackground(self, workingdirectorypath, datafoldername, analysisfolderpath)
+
+            bgsubstrdatalist, summedmassspec = readolddata.readolddata(self, backgrounddata, workingdirectorypath,
                                                               datafoldername, analysisfolderpath, progressbarfolder,
                                                               datalengthlimit)
+            monofilecontent = readolddata.readoldmonofile(self, workingdirectorypath, datafoldername)
+        else:
+            print('## ELSE: READ NEW DATA ##')
+            bgsubstrdatalist, summedmassspec = self.readrawdatav2(self, backgrounddata, workingdirectorypath,
+                                                              datafoldername, analysisfolderpath, progressbarfolder,
+                                                              datalengthlimit)
+
+
         print('############################## Length of summedmassspec:', summedmassspec.__len__())
 
         Logfile.writelog(Logfile, 'readrawdatav2 success,\tnext step: calc threshold')
