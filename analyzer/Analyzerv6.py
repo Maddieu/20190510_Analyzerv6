@@ -806,6 +806,8 @@ class Doanalysis():
         plt.plot(x, m*x+b)
         os.chdir(analysisfolderpath)
         plt.savefig('thresholddetection.png')
+        plt.clf()
+        plt.close()
         # plt.show()
         return round(threshold)
 
