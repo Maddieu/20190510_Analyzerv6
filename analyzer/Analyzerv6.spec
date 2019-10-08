@@ -3,8 +3,8 @@
 block_cipher = None
 
 
-a = Analysis(['D:/Python/20190510_Analyzerv6/analyzer/Analyzerv6.py'],
-             pathex=['D:\\Python\\20190510_Analyzerv6\\analyzer'],
+a = Analysis(['D:/Martin/Python/20190510_Analyzerv6/analyzer/Analyzerv6.py'],
+             pathex=['D:\\Martin\\Python\\20190510_Analyzerv6\\analyzer'],
              binaries=[],
              datas=[],
              hiddenimports=[],

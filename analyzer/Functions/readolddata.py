@@ -93,7 +93,8 @@ def readoldmonofile(self, workingdirectorypath, datafoldername):
     print('readoldmono_test3')
 
     for energyelement in monofilecontent:
-        print(energyelement)
+        pass
+        #print(energyelement)
 
     return monofilecontent
 

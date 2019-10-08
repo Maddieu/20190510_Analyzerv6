@@ -322,6 +322,10 @@ class Fenster(QWidget):
         self.labelsleeptimebeforestart = QLabel(self)
         self.labelsleeptimebeforestart.setText('Sleeptime before start in seconds:')
         self.labelsleeptimebeforestart.move(620, height - 70)
+        self.labelsleeptimebeforestart.setToolTip("This might help if you want to analyze a lot of folders but don't "
+                                                  "want to kill your PC. so you can put something like 14400 seconds "
+                                                  "(= 4 hours) and it will wait for 4 hours and only start the "
+                                                  "analysis then, when you're maybe already at home. ")
 
         self.lineeditsleeptimebeforestart = QLineEdit('0', self)
         self.lineeditsleeptimebeforestart.move(620, height - 50)
@@ -418,7 +422,7 @@ class Fenster(QWidget):
             inifilecontent = []
 
         # default values if inifile-readout does not work:
-        datalengthlimit, thresholdfactor, minbroadnessofpeak, peakbroadnesstolerance = 100000, 1.5, 11, 5
+        datalengthlimit, thresholdfactor, minbroadnessofpeak, peakbroadnesstolerance = 100000, 1.7, 11, 5
         masscalib1time, masscalib1mass, masscalib2time, masscalib2mass = 2.397, 55.0, 2.12, 43.0
         untergrundchannelfirst, untergrundchannellast = 10000, 30000
 
@@ -624,7 +628,6 @@ class Fenster(QWidget):
 
 
 class Doanalysis():
-    # class Doanalysis(QThread):
 
 
     def createanalysisfolder(self, workingdirectorypath, datafoldername, analysisfolderpath):
@@ -786,7 +789,7 @@ class Doanalysis():
         plt.scatter(plotselectedpeakchannel, plotselectedpeaksummedmassspec, color="red")
         plt.show()
 
-    def detectthreshold(self, summedmassspec, thresholdfactor):
+    def detectthreshold(self, summedmassspec, thresholdfactor, analysisfolderpath):
         xkoordinaten = []
         laenge = summedmassspec.__len__()
         for i in range(laenge):
@@ -799,8 +802,10 @@ class Doanalysis():
         x = np.linspace(0, laenge, 1000)
         threshold = (laenge * m + b) * thresholdfactor
         # print('threshold:', threshold)
-        # plt.plot(sorted(summedmassspec))
-        # plt.plot(x, m*x+b)
+        plt.plot(sorted(summedmassspec))
+        plt.plot(x, m*x+b)
+        os.chdir(analysisfolderpath)
+        plt.savefig('thresholddetection.png')
         # plt.show()
         return round(threshold)
 
@@ -981,10 +986,31 @@ class Doanalysis():
         calibratedmass = str(round(calibratedmass, 2)).replace('.', 'p')
         return calibratedmass
 
+    def domasscalibrationforasinglechannel(self, singlechannel, masscalibparameters):
+        flighttime = singlechannel * 1 / 2 * 10 ** -9
+
+        calibratedmass = masscalibparameters[0] * flighttime ** 2 + flighttime * masscalibparameters[1] + \
+                         masscalibparameters[2]
+        #calibratedmass = str(round(calibratedmass, 2)).replace('.', 'p')
+        return calibratedmass
+
+    def findmassaxis(self, summedmassspec, masscalibparameters):
+        print('#### here we are mass axis party')
+        print('xaxischannellength:\t')
+        #print(summedmassspec.__len__())
+        massaxis = []
+        for channelnumber in range(summedmassspec.__len__()):
+            flighttime = channelnumber * 1 / 2 * 10 ** -9
+            massaxis.append(masscalibparameters[0] * flighttime ** 2 + flighttime * masscalibparameters[1] + \
+                         masscalibparameters[2])
+        print('### here we go again, massaxis is:')
+        #print(massaxis)
+        return massaxis
+
     def exportmassspecandspectrum(self, summedmassspec, threshold, plotselectedpeakchannel,
                                   plotselectedpeaksummedmassspec, spectrum, monofilecontent, workingdirectorypath,
                                   datafoldername, analysisfolderpath, peaknumberchannels, masscalibparameters,
-                                  untergrundboundaries):
+                                  untergrundboundaries, massaxis):
 
         if spectrum.__len__() == 0:
             with open('_ERROOOR.txt', 'a') as file:
@@ -1005,7 +1031,7 @@ class Doanalysis():
             for peak in range(spectrum.__len__()):
                 calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters)
                 with open(datafoldername + '_m' + calibratedmass + '_singlespec.txt', 'a') as file:
-                    print(datafoldername + '_m' + calibratedmass + '_singlespec.txt')
+                    ## ## print(datafoldername + '_m' + calibratedmass + '_singlespec.txt')
                     # print(spectrum[peak])
                     file.write(
                         datafoldername + '_m' + calibratedmass + '_Energie' + '\t' + datafoldername + '_m' + calibratedmass + '_Normiert' + '\n')
@@ -1027,9 +1053,9 @@ class Doanalysis():
 
             # create a SUM MS file and write the MS Intensities into it //  no channels
             with open(datafoldername + '_massspec_sum.txt', 'a') as file:
-                file.write(datafoldername + 'MS_SUM_Normiert\n')
+                file.write(datafoldername + 'MS_SUM_Energie' + '\t' + datafoldername + 'MS_SUM_Normiert\n')
                 for channel in range(summedmassspec.__len__()):
-                    file.write(str(summedmassspec[channel]) + '\n')
+                    file.write(str(massaxis[channel]) + '\t' + str(summedmassspec[channel]) + '\n')
 
             with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
@@ -1169,15 +1195,30 @@ class Doanalysis():
 
         try:
             plt.figure(figsize=(60, 10))
-            plt.plot(summedmassspec, color='grey', linewidth=0.2)
-            # plt.plot([i for i in range(summedmassspec.__len__())], threshold)
-            plt.plot([0, summedmassspec.__len__()], [threshold, threshold], linestyle='--')
 
-            plt.plot([untergrundlowerboundary, untergrundlowerboundary],
+
+            # plot mass spectrum
+
+            plt.plot(massaxis, summedmassspec, color='grey', linewidth=0.2)
+            # plt.plot([i for i in range(summedmassspec.__len__())], threshold)
+
+            ###
+            ###  Plot horizontal threshold line
+            ###
+
+            summedmassspeclenmass = self.domasscalibrationforasinglechannel(self, summedmassspec.__len__(), masscalibparameters)
+            plt.plot([0, summedmassspeclenmass], [threshold, threshold], linestyle='--')
+
+            ## plot red vertical boundary lines
+
+            untergrundlowerboundarymass = self.domasscalibrationforasinglechannel(self, untergrundlowerboundary, masscalibparameters)
+            untergrundupperboundarymass = self.domasscalibrationforasinglechannel(self, untergrundupperboundary, masscalibparameters)
+
+            plt.plot([untergrundlowerboundarymass, untergrundlowerboundarymass],
                      [min(summedmassspec[untergrundlowerboundary:untergrundupperboundary]),
                       max(summedmassspec[untergrundlowerboundary:untergrundupperboundary])], color="red",
                      linestyle='--')
-            plt.plot([untergrundupperboundary, untergrundupperboundary],
+            plt.plot([untergrundupperboundarymass, untergrundupperboundarymass],
                      [min(summedmassspec[untergrundlowerboundary:untergrundupperboundary]),
                       max(summedmassspec[untergrundlowerboundary:untergrundupperboundary])], color="red",
                      linestyle='--')
@@ -1185,21 +1226,37 @@ class Doanalysis():
             # plt.scatter(plotselectedpeakchannel, plotselectedpeaksummedmassspec, color="red")
             for peak in range(peaknumberchannels.__len__()):
                 tempmassspec = []
+                tempmassxaxis = []
+
                 for channel in peaknumberchannels[peak]:
+                    #assign the y-axis value for the given channel
                     tempmassspec.append(summedmassspec[channel])
-                plt.fill_between(peaknumberchannels[peak], tempmassspec, alpha=0.7)
+
+                    #get the x-axis value (mass) for the given channel
+                    massofcurrentchannel = self.domasscalibrationforasinglechannel(self, channel, masscalibparameters)
+                    tempmassxaxis.append(massofcurrentchannel)
+
+                #plt.fill_between(peaknumberchannels[peak], tempmassspec, alpha=0.7)
+                plt.fill_between(tempmassxaxis, tempmassspec, alpha=0.7)
 
                 calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters)
 
-                plt.annotate(s=str(calibratedmass), xy=(peaknumberchannels[peak][0] - 100, max(tempmassspec) * 0.9))
+                #plt.annotate(s=str(calibratedmass), xy=(peaknumberchannels[peak][0] - 100, max(tempmassspec) * 0.9))
+                plt.annotate(s=str(calibratedmass), xy=((float(tempmassxaxis[0]) - 0.2), max(tempmassspec) * 0.9))
+
+
+            plt.xticks(np.arange(min(massaxis), max(massaxis), 5))
+
 
             plt.savefig('__summedmassspec.png', dpi=100, transparent=True)
             plt.clf()
             plt.close()
             gc.collect()
-        except:
+        except Exception as err:
             with open('___ERROR.txt', 'a') as file:
                 file.write('couldn\'t print overview mass spec\n')
+                print(err)
+                file.write(str(err))
             try:
                 plt.figure(figsize=(30, 8))
                 plt.plot(summedmassspec, color='grey', linewidth=0.2)
@@ -1489,12 +1546,9 @@ class Doanalysis():
                                                               datafoldername, analysisfolderpath, progressbarfolder,
                                                               datalengthlimit)
 
-
-        print('############################## Length of summedmassspec:', summedmassspec.__len__())
-
         Logfile.writelog(Logfile, 'readrawdatav2 success,\tnext step: calc threshold')
 
-        threshold = self.detectthreshold(self, summedmassspec, thresholdfactor)
+        threshold = self.detectthreshold(self, summedmassspec, thresholdfactor, analysisfolderpath)
 
         Logfile.writelog(Logfile, 'threshold success,\tnext step: find peak channels')
 
@@ -1520,11 +1574,12 @@ class Doanalysis():
         masscalibparameters = self.transformchannelsinmass(self, masscalibvalues)
 
         print(masscalibparameters)
+        massaxis = self.findmassaxis(self, summedmassspec, masscalibparameters)
 
         self.exportmassspecandspectrum(self, summedmassspec, threshold, plotselectedpeakchannel,
                                        plotselectedpeaksummedmassspec, normalizedspectrum, monofilecontent,
                                        workingdirectorypath, datafoldername, analysisfolderpath, peaknumberchannels,
-                                       masscalibparameters, untergrundboundaries)
+                                       masscalibparameters, untergrundboundaries, massaxis)
 
         Logfile.writelog(Logfile, 'everything exported,\tfinished \n\n')
 
@@ -1544,3 +1599,22 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+##  Changelog
+##      2019 10 08
+##
+##
+##
+##
+##
+##
+##
+##
+##
+##
