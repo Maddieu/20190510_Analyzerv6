@@ -1610,7 +1610,7 @@ if __name__ == "__main__":
 
 ##  Changelog
 ##      2019 10 08
-##
+##          exported mass spec .png: added mass as x-axis
 ##
 ##
 ##
