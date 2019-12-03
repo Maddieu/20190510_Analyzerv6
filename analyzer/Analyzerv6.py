@@ -11,18 +11,36 @@ import matplotlib.pyplot as plt
 import numpy as np
 import psutil
 import gc
+from datetime import datetime, timedelta
 
 
 from Functions import readolddata
 
 #parentdirectorypath = "D:\\Messdaten\\2019_03_ESI_FeBpy\\20190321_MnAcac_Python\\MnAA_test"
 
-parentdirectorypath = "D:\\Messdaten\\2019_03_ESI_FeBpy\\20190321_MnAcac_Python\\OldData_test"
+#parentdirectorypath = "D:\\Messdaten\\2019_03_ESI_FeBpy\\20190321_MnAcac_Python\\OldData_test"
+parentdirectorypath = "D:\\Martin\Messdaten\\20191202_Pyridine_ESI\\exp_python_test"
 
 
 #       For new installation:
-#               Import the following modules:
+#               Import / Install the following modules:
 #                           PyQt5           matplotlib          numpy           psutil
+
+
+#
+#       Mass Calibration
+#           channel 1 and 2
+#           mass , e-5 seconds
+
+masscalibdefault1 = 56, 2.423
+masscalibdefault2 = 115, 3.468
+
+defaultvalues = [100000, 1.7, 11, 5, masscalibdefault1[1], masscalibdefault1[0], masscalibdefault2[1], masscalibdefault2[0], 10000, 30000]
+#datalengthlimit, thresholdfactor, minbroadnessofpeak, peakbroadnesstolerance = 100000, 1.7, 11, 5
+#masscalib1time, masscalib1mass, masscalib2time, masscalib2mass = 2.397, 55.0, 2.12, 43.0
+#untergrundchannelfirst, untergrundchannellast = 10000, 30000
+
+
 
 
 ##  Note:
@@ -422,9 +440,9 @@ class Fenster(QWidget):
             inifilecontent = []
 
         # default values if inifile-readout does not work:
-        datalengthlimit, thresholdfactor, minbroadnessofpeak, peakbroadnesstolerance = 100000, 1.7, 11, 5
-        masscalib1time, masscalib1mass, masscalib2time, masscalib2mass = 2.397, 55.0, 2.12, 43.0
-        untergrundchannelfirst, untergrundchannellast = 10000, 30000
+        datalengthlimit, thresholdfactor, minbroadnessofpeak, peakbroadnesstolerance = defaultvalues[0], defaultvalues[1], defaultvalues[2], defaultvalues[3]
+        masscalib1time, masscalib1mass, masscalib2time, masscalib2mass = defaultvalues[4], defaultvalues[5], defaultvalues[6], defaultvalues[7]
+        untergrundchannelfirst, untergrundchannellast = defaultvalues[8], defaultvalues[9]
 
         # check if values in inifile are more specified
         for line in inifilecontent:
@@ -1032,11 +1050,15 @@ class Doanalysis():
 
             for peak in range(spectrum.__len__()):
                 calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters)
-                with open(datafoldername + '_m' + calibratedmass + '_singlespec.txt', 'a') as file:
+                summedupintensityofthepeak = sum(spectrum[peak])
+                #summedupintensityofthepeak = 2000
+                #print(spectrum[peak])
+                intensitystring = str(round(summedupintensityofthepeak/100000))
+                with open(datafoldername + '_m' + calibratedmass + '_singlespec_intensity_' + intensitystring + '.txt', 'a') as file:
                     ## ## print(datafoldername + '_m' + calibratedmass + '_singlespec.txt')
                     # print(spectrum[peak])
                     file.write(
-                        datafoldername + '_m' + calibratedmass + '_Energie' + '\t' + datafoldername + '_m' + calibratedmass + '_Normiert' + '\n')
+                        datafoldername + '_m' + calibratedmass + '_intensity_' + intensitystring + '_Energie' + '\t' + datafoldername + '_m' + calibratedmass + '_intensity_' + intensitystring + '_Normiert' + '\n')
                     for datapoint in range(spectrum[peak].__len__()):
                         file.write(str(monofilecontent[datapoint][3]) + '\t' + str(spectrum[peak][datapoint]) + '\n')
 
@@ -1202,6 +1224,11 @@ class Doanalysis():
             # plot mass spectrum
 
             plt.plot(massaxis, summedmassspec, color='grey', linewidth=0.2)
+
+            plt.xlabel('Time of Flight -> Mass / Charge [m/z]', fontsize = 40)
+            plt.ylabel('Intensity [a.u.]', fontsize = 40)
+            plt.xticks(fontsize = 32)
+            plt.yticks(fontsize = 32)
             # plt.plot([i for i in range(summedmassspec.__len__())], threshold)
 
             ###
@@ -1244,7 +1271,7 @@ class Doanalysis():
                 calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters)
 
                 #plt.annotate(s=str(calibratedmass), xy=(peaknumberchannels[peak][0] - 100, max(tempmassspec) * 0.9))
-                plt.annotate(s=str(calibratedmass), xy=((float(tempmassxaxis[0]) - 0.2), max(tempmassspec) * 0.9))
+                plt.annotate(s=str(calibratedmass), xy=((float(tempmassxaxis[0]) - 0.2), max(tempmassspec) * 1), fontsize=24, rotation=90)
 
 
             plt.xticks(np.arange(min(massaxis), max(massaxis), 5))
@@ -1303,28 +1330,48 @@ class Doanalysis():
             ######### PEAK Identification // range limited to selected peaks
         try:
             plt.figure(figsize=(60, 10))
+
+            plt.xlabel('Time of Flight -> Mass / Charge [m/z]', fontsize = 40)
+            plt.ylabel('Intensity [a.u.]', fontsize = 40)
+            plt.xticks(fontsize = 32)
+            plt.yticks(fontsize = 32)
+
             lowerboundary = min(plotselectedpeakchannel) - 1000
             upperboundary = max(plotselectedpeakchannel) + 1000
             if upperboundary > summedmassspec.__len__():
                 upperboundary = summedmassspec.__len__()
-            plt.plot([i for i in range(lowerboundary, upperboundary)], summedmassspec[lowerboundary:upperboundary],
+            #plt.plot([i for i in range(lowerboundary, upperboundary)], summedmassspec[lowerboundary:upperboundary],
+            #         color='grey', linewidth=0.2)
+            plt.plot(massaxis[lowerboundary:upperboundary], summedmassspec[lowerboundary:upperboundary],
                      color='grey', linewidth=0.2)
+
             # plt.plot([i for i in range(summedmassspec.__len__())], threshold)
-            plt.plot([lowerboundary, upperboundary], [threshold, threshold], linestyle='--')
+            #plt.plot([lowerboundary, upperboundary], [threshold, threshold], linestyle='--')
+            plt.plot([massaxis[lowerboundary], massaxis[upperboundary]], [threshold, threshold], linestyle='--')
+
+
             # plt.scatter(plotselectedpeakchannel, plotselectedpeaksummedmassspec, color="red")
             for peak in range(peaknumberchannels.__len__()):
                 tempmassspec = []
+                tempmassxaxis = []
                 for channel in peaknumberchannels[peak]:
+                    #assign the y-axis value for the given channel
                     tempmassspec.append(summedmassspec[channel])
-                plt.fill_between(peaknumberchannels[peak], tempmassspec, alpha=0.3)
+
+                    #get the x-axis value (mass) for the given channel
+                    massofcurrentchannel = self.domasscalibrationforasinglechannel(self, channel, masscalibparameters)
+                    tempmassxaxis.append(massofcurrentchannel)
+
+                #plt.fill_between(peaknumberchannels[peak], tempmassspec, alpha=0.7)
+                plt.fill_between(tempmassxaxis, tempmassspec, alpha=0.7)
 
                 calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters)
 
-                plt.annotate(s=str(calibratedmass), xy=(peaknumberchannels[peak][0] - 40, max(tempmassspec) * 0.9))
+                plt.annotate(s=str(calibratedmass), xy=((float(tempmassxaxis[0]) - 0.2), max(tempmassspec) * 1),
+                             fontsize=24, rotation=90)
 
-                # plt.fill(tempmassspec, threshold[peaknumberchannels[peak][0]:peaknumberchannels[peak][-1]])
+            # plt.fill(tempmassspec, threshold[peaknumberchannels[peak][0]:peaknumberchannels[peak][-1]])
                 # plt.plot(peaknumberchannels[peak], tempmassspec, linewidth=0.1)
-
             # print(plotselectedpeakchannel)
             # print(plotselectedpeaksummedmassspec)
             # plt.show()
@@ -1386,55 +1433,36 @@ class Doanalysis():
         print('wrote log before Untergrund, going to Untergrund')
 
         try:
-            print('close plot, if there is one')
-
-            print('closed plot, if there was one.\t\t create figure')
 
             plt.figure(figsize=(60, 10))
-
-            print('assign boundaries')
+            plt.xlabel('Time of Flight [Channelnumber]', fontsize = 40)
+            plt.ylabel('Intensity [a.u.]', fontsize = 40)
+            plt.xticks(fontsize = 32)
+            plt.yticks(fontsize = 32)
 
             lowerboundary = untergrundlowerboundary - 4000
 
-            print('assigned lower boundary')
-
             upperboundary = untergrundupperboundary + 4000
 
-            print('assigned upper boundary')
-
-            print('lowerboundary:', lowerboundary)
-            print('upperboundary:', upperboundary)
-            print('untergrundlowerboundary:', untergrundlowerboundary)
-            print('untergrundupperboundary:', untergrundupperboundary)
-
-            print('plot Untergrund:\t\t next: plot mass spec in background')
 
             plt.plot([i for i in range(lowerboundary, upperboundary)], summedmassspec[lowerboundary:upperboundary],
                      color='grey', linewidth=0.2)
 
-            print('plot Untergrund:\t\t next: plot threshold line')
-
             plt.plot([lowerboundary, upperboundary], [threshold, threshold], linestyle='--')
 
-            print('plot Untergrund:\t\t next: plot lower boundary line')
 
             plt.plot([untergrundlowerboundary, untergrundlowerboundary],
                      [min(summedmassspec[untergrundlowerboundary:untergrundupperboundary]),
                       max(summedmassspec[untergrundlowerboundary:untergrundupperboundary])], color="red",
                      linestyle='--')
 
-            print('plot Untergrund:\t\t next: plot upper boundary line')
 
             plt.plot([untergrundupperboundary, untergrundupperboundary],
                      [min(summedmassspec[untergrundlowerboundary:untergrundupperboundary]),
                       max(summedmassspec[untergrundlowerboundary:untergrundupperboundary])], color="red",
                      linestyle='--')
 
-            print('plot Untergrund:\t\t next: save image as png')
-
             plt.savefig('_massspec_Untergrund_area.png', dpi=100, transparent=True)
-
-            print('plot Untergrund:\t\t next: close plot')
 
             plt.clf()
             plt.close()
@@ -1467,6 +1495,14 @@ class Doanalysis():
                 with open('___ERROR.txt', 'a') as file:
                     file.write('couldn\'t print low res mass spec with Untergrund Area\n')
             # plt.legend(i)
+
+        with open(datafoldername + 'metadata.txt', 'a') as file:
+            file.write('#absolute datetime of aqcuisition = ' + monofilecontent[0][1] + '\n')
+            readable_time_string = (datetime(1904, 1, 1, 0, 0) + timedelta(seconds=float(monofilecontent[0][1]) + 3600)).strftime('%Y-%m-%d %H:%M:%S')
+            file.write('#readable datetime (mactime -> datetime) = ' + readable_time_string + '\n')
+            #file.write('#keep in mind that the time format in the mono file is MAC TIME AND NOT UNIX FFS!!\n')
+            file.write('#slitwidth [um]= ' + monofilecontent[0][6] + '\n')
+            file.write('#energy resolution (FWHM) at 1st data point [meV] = ' + monofilecontent[0][7] + '\n')
 
         # os.chdir('..')
 
