@@ -19,7 +19,8 @@ from Functions import readolddata
 #parentdirectorypath = "D:\\Messdaten\\2019_03_ESI_FeBpy\\20190321_MnAcac_Python\\MnAA_test"
 
 #parentdirectorypath = "D:\\Messdaten\\2019_03_ESI_FeBpy\\20190321_MnAcac_Python\\OldData_test"
-parentdirectorypath = "D:\\Martin\Messdaten\\20191202_Pyridine_ESI\\exp_python_test"
+#parentdirectorypath = "D:\\Martin\\Messdaten\\20191202_Pyridine_ESI\\exp_python_test"
+parentdirectorypath = "D:\\Martin\\Messdaten\\20191202_Pyridine_ESI\\exp_python_test\\test"
 
 
 #       For new installation:
@@ -685,11 +686,31 @@ class Doanalysis():
     def readmonofile2(self, workingdirectorypath, datafoldername):
         os.chdir(workingdirectorypath)
 
+
+        #monofilemetacontent = ['M_empty', 'dm_empty', 'qmspot_empty']
+        monofilemetacontent = []
+
         with open(datafoldername + '_Mono.txt', 'r', encoding="cp1252") as file:
             content = []
             for line in file:
+            #     if line.startswith('# massfilter dM'):
+            #         monofilemetacontent[1] = line.split()[-1]
+            #     if line.startswith('# massfilter mass'):
+            #         monofilemetacontent[0] = line.split()[-1]
+            #     if line.startswith('# massfilter PQMF'):
+            #         monofilemetacontent[2] = line.split()[-1]
+                if line.startswith('# Metadaten'):
+                    file.readline()
+
+                    for i in range(31):
+                        tempobject = file.readline()
+                        monofilemetacontent.append(tempobject)
+
                 if line == '# LEGEND\n':
                     content = file.readlines()
+
+
+
             monofilecontent = []
             i = 0
             for elementline in content:
@@ -701,7 +722,7 @@ class Doanalysis():
                         monofilecontent[i].append(elementdata)
                     i = i + 1
 
-        return monofilecontent
+        return monofilecontent, monofilemetacontent
 
     def readbackground(self, workingdirectorypath, datafoldername, analysisfolderpath):
 
@@ -1030,7 +1051,7 @@ class Doanalysis():
     def exportmassspecandspectrum(self, summedmassspec, threshold, plotselectedpeakchannel,
                                   plotselectedpeaksummedmassspec, spectrum, monofilecontent, workingdirectorypath,
                                   datafoldername, analysisfolderpath, peaknumberchannels, masscalibparameters,
-                                  untergrundboundaries, massaxis):
+                                  untergrundboundaries, massaxis, monofilemetacontent):
 
         if spectrum.__len__() == 0:
             with open('_ERROOOR.txt', 'a') as file:
@@ -1496,13 +1517,43 @@ class Doanalysis():
                     file.write('couldn\'t print low res mass spec with Untergrund Area\n')
             # plt.legend(i)
 
-        with open(datafoldername + 'metadata.txt', 'a') as file:
-            file.write('#absolute datetime of aqcuisition = ' + monofilecontent[0][1] + '\n')
-            readable_time_string = (datetime(1904, 1, 1, 0, 0) + timedelta(seconds=float(monofilecontent[0][1]) + 3600)).strftime('%Y-%m-%d %H:%M:%S')
-            file.write('#readable datetime (mactime -> datetime) = ' + readable_time_string + '\n')
-            #file.write('#keep in mind that the time format in the mono file is MAC TIME AND NOT UNIX FFS!!\n')
-            file.write('#slitwidth [um]= ' + monofilecontent[0][6] + '\n')
-            file.write('#energy resolution (FWHM) at 1st data point [meV] = ' + monofilecontent[0][7] + '\n')
+        with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+            logfile.write(
+                time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
+                    psutil.virtual_memory()) + '\t\tin export next step: export meta data and photo current curve\t\n')
+
+        try:
+            with open('_' + datafoldername + '_metadata.txt', 'a') as file:
+                file.write(datafoldername + '\n\n')
+                file.write('#absolute datetime of aqcuisition = ' + monofilecontent[0][1] + '\n')
+                readable_time_string = (datetime(1904, 1, 1, 0, 0) + timedelta(seconds=float(monofilecontent[0][1]) + 3600)).strftime('%Y-%m-%d %H:%M:%S')
+                file.write('#readable datetime (mactime -> datetime) = ' + readable_time_string + '\n')
+                #file.write('#keep in mind that the time format in the mono file is MAC TIME AND NOT UNIX FFS!!\n')
+                file.write('#slitwidth [um]= ' + monofilecontent[0][6] + '\n')
+                file.write('#energy resolution (FWHM) at 1st data point [meV] = ' + monofilecontent[0][7] + '\n')
+                file.write('#photocurrent at first data point [A] = ' + monofilecontent[0][5] + '\n')
+                file.write('\n\n\n## monofile meta data\n')
+                for line in monofilemetacontent:
+                    file.write(line)
+        except:
+            with open('___ERROR.txt', 'a') as file:
+                file.write('couldn\'t export metadata\n')
+
+
+
+        try:
+            os.chdir(analysisfolderpath)
+            os.chdir('data_export')
+            with open(datafoldername + '_photocurrent_over_energy.txt', 'a') as file:
+                file.write(datafoldername + '_photocurrent_Energie' + '\t' + datafoldername + '_photocurrent_Normiert' + '\n')
+                for n, element in enumerate(monofilecontent):
+                    file.write(str(monofilecontent[n][3]) + '\t' + str(monofilecontent[n][5]) + '\n')
+                    #file.write(str(monofilecontent[datapoint][3]) + '\t' + str(spectrum[peak][datapoint]) + '\n')
+
+
+        except:
+            with open('___ERROR.txt', 'a') as file:
+                file.write('couldn\'t export photocurrent curve\n')
 
         # os.chdir('..')
 
@@ -1558,7 +1609,7 @@ class Doanalysis():
 
         Logfile.writelog(Logfile, 'analysis folder created,\tnext step: read monofilecontent')
 
-        monofilecontent = self.readmonofile2(self, workingdirectorypath, datafoldername)
+        monofilecontent, monofilemetacontent = self.readmonofile2(self, workingdirectorypath, datafoldername)
 
         Logfile.writelog(Logfile, 'monofilecontent read,\tnext step: read backgroundfile')
 
@@ -1617,7 +1668,7 @@ class Doanalysis():
         self.exportmassspecandspectrum(self, summedmassspec, threshold, plotselectedpeakchannel,
                                        plotselectedpeaksummedmassspec, normalizedspectrum, monofilecontent,
                                        workingdirectorypath, datafoldername, analysisfolderpath, peaknumberchannels,
-                                       masscalibparameters, untergrundboundaries, massaxis)
+                                       masscalibparameters, untergrundboundaries, massaxis, monofilemetacontent)
 
         Logfile.writelog(Logfile, 'everything exported,\tfinished \n\n')
 
