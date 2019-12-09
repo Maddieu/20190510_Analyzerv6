@@ -1524,6 +1524,7 @@ class Doanalysis():
 
         try:
             with open('_' + datafoldername + '_metadata.txt', 'a') as file:
+                file.write(analysisfolderpath + '\n')
                 file.write(datafoldername + '\n\n')
                 file.write('#absolute datetime of aqcuisition = ' + monofilecontent[0][1] + '\n')
                 readable_time_string = (datetime(1904, 1, 1, 0, 0) + timedelta(seconds=float(monofilecontent[0][1]) + 3600)).strftime('%Y-%m-%d %H:%M:%S')
