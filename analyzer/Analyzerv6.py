@@ -36,7 +36,7 @@ parentdirectorypath = "D:\\Martin\\Messdaten\\20191202_Pyridine_ESI\\exp_python_
 masscalibdefault1 = 56, 2.423
 masscalibdefault2 = 115, 3.468
 
-defaultvalues = [100000, 1.7, 11, 5, masscalibdefault1[1], masscalibdefault1[0], masscalibdefault2[1], masscalibdefault2[0], 10000, 30000]
+defaultvalues = [100000, 1.7, 11, 5, masscalibdefault1[1], masscalibdefault1[0], masscalibdefault2[1], masscalibdefault2[0], 16000, 20000]
 #datalengthlimit, thresholdfactor, minbroadnessofpeak, peakbroadnesstolerance = 100000, 1.7, 11, 5
 #masscalib1time, masscalib1mass, masscalib2time, masscalib2mass = 2.397, 55.0, 2.12, 43.0
 #untergrundchannelfirst, untergrundchannellast = 10000, 30000
@@ -789,6 +789,13 @@ class Doanalysis():
 
                     # print('File Nr.:', element, 'from:', filelist.__len__()-2, '/// line:', i)
                     i = i + 1
+
+
+                    if i == 3:
+                        timebase = float(line.split()[1])
+                        #print('\ttimebase:\t', timebase)
+
+
                     if not line.startswith('#'):
                         bgsubstracteddatapoint = (int(line.replace('\n', "")) - int(backgrounddata[j]))
                         bgsubstrdatalist[element - 1].append(str(bgsubstracteddatapoint))
@@ -802,7 +809,7 @@ class Doanalysis():
                     ####################################### this one up here has to be deleted // it is a Abbruchbedingung if a mass spec file is longer than x channels
                     ################################################################################################
 
-        return bgsubstrdatalist, summedmassspec
+        return bgsubstrdatalist, summedmassspec, timebase
 
     def backgroundsubstraction(self, rawdatalist, backgrounddata):
         bglist = []
@@ -1017,18 +1024,20 @@ class Doanalysis():
         print('spectrum successfully normalized. returning now')
         return normalizedspectrum
 
-    def domasscalibration(self, currentmasschannels, masscalibparameters):
+    def domasscalibration(self, currentmasschannels, masscalibparameters, timebase):
 
         middlechannel = (currentmasschannels[0] + currentmasschannels[-1]) / 2
-        flighttime = middlechannel * 1 / 2 * 10 ** -9
+        # flighttime = middlechannel * 1 / 2 * 10 ** -9
+        flighttime = middlechannel * timebase
 
         calibratedmass = masscalibparameters[0] * flighttime ** 2 + flighttime * masscalibparameters[1] + \
                          masscalibparameters[2]
         calibratedmass = str(round(calibratedmass, 2)).replace('.', 'p')
         return calibratedmass
 
-    def domasscalibrationforasinglechannel(self, singlechannel, masscalibparameters):
-        flighttime = singlechannel * 1 / 2 * 10 ** -9
+    def domasscalibrationforasinglechannel(self, singlechannel, masscalibparameters, timebase):
+        # flighttime = singlechannel * 1 / 2 * 10 ** -9
+        flighttime = singlechannel * timebase
 
         calibratedmass = masscalibparameters[0] * flighttime ** 2 + flighttime * masscalibparameters[1] + \
                          masscalibparameters[2]
@@ -1051,7 +1060,7 @@ class Doanalysis():
     def exportmassspecandspectrum(self, summedmassspec, threshold, plotselectedpeakchannel,
                                   plotselectedpeaksummedmassspec, spectrum, monofilecontent, workingdirectorypath,
                                   datafoldername, analysisfolderpath, peaknumberchannels, masscalibparameters,
-                                  untergrundboundaries, massaxis, monofilemetacontent):
+                                  untergrundboundaries, massaxis, monofilemetacontent, timebase):
 
         if spectrum.__len__() == 0:
             with open('_ERROOOR.txt', 'a') as file:
@@ -1070,7 +1079,7 @@ class Doanalysis():
                         psutil.virtual_memory()) + '\t\tin export next step: export spectra for all peaks\t\n')
 
             for peak in range(spectrum.__len__()):
-                calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters)
+                calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters, timebase)
                 summedupintensityofthepeak = sum(spectrum[peak])
                 #summedupintensityofthepeak = 2000
                 #print(spectrum[peak])
@@ -1122,7 +1131,7 @@ class Doanalysis():
             # i = 0
             for peak in range(peaknumberchannels.__len__()):
                 # print('line nr.:', inspect.currentframe().f_lineno)
-                calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters)
+                calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters, timebase)
                 # print('line nr.:', inspect.currentframe().f_lineno)
 
                 with open(datafoldername + '_m' + calibratedmass + '_channels.txt', 'a') as file:
@@ -1160,7 +1169,7 @@ class Doanalysis():
             for i in range(spectrum.__len__()):
                 plt.plot(photonenergy[0:spectrum[i].__len__()], spectrum[i])
                 plt.title('Spectra for peaks from Scannr: ' + datafoldername)
-                calibratedmass = self.domasscalibration(self, peaknumberchannels[i], masscalibparameters)
+                calibratedmass = self.domasscalibration(self, peaknumberchannels[i], masscalibparameters, timebase)
                 plt.annotate(s=calibratedmass,
                              xy=(photonenergy[spectrum[i].index(max(spectrum[i])) - 1], max(spectrum[i])))
             plt.savefig(datafoldername + '_allspectra' + '.png', transparent=True)
@@ -1223,7 +1232,7 @@ class Doanalysis():
 
                 plt.plot(photonenergy[0:spectrum[i].__len__()], spectrum[i], color=f'C{colorcyclenumber}')
                 # plt.title(str(datafoldername + '_peak' + j + '.txt'))
-                calibratedmass = self.domasscalibration(self, peaknumberchannels[i], masscalibparameters)
+                calibratedmass = self.domasscalibration(self, peaknumberchannels[i], masscalibparameters, timebase)
                 plt.title(datafoldername + '_m' + calibratedmass + '.txt')
                 plt.savefig(datafoldername + '_m' + calibratedmass + '.png', transparent=True)
                 plt.clf()
@@ -1256,13 +1265,13 @@ class Doanalysis():
             ###  Plot horizontal threshold line
             ###
 
-            summedmassspeclenmass = self.domasscalibrationforasinglechannel(self, summedmassspec.__len__(), masscalibparameters)
+            summedmassspeclenmass = self.domasscalibrationforasinglechannel(self, summedmassspec.__len__(), masscalibparameters, timebase)
             plt.plot([0, summedmassspeclenmass], [threshold, threshold], linestyle='--')
 
             ## plot red vertical boundary lines
 
-            untergrundlowerboundarymass = self.domasscalibrationforasinglechannel(self, untergrundlowerboundary, masscalibparameters)
-            untergrundupperboundarymass = self.domasscalibrationforasinglechannel(self, untergrundupperboundary, masscalibparameters)
+            untergrundlowerboundarymass = self.domasscalibrationforasinglechannel(self, untergrundlowerboundary, masscalibparameters, timebase)
+            untergrundupperboundarymass = self.domasscalibrationforasinglechannel(self, untergrundupperboundary, masscalibparameters, timebase)
 
             plt.plot([untergrundlowerboundarymass, untergrundlowerboundarymass],
                      [min(summedmassspec[untergrundlowerboundary:untergrundupperboundary]),
@@ -1283,13 +1292,13 @@ class Doanalysis():
                     tempmassspec.append(summedmassspec[channel])
 
                     #get the x-axis value (mass) for the given channel
-                    massofcurrentchannel = self.domasscalibrationforasinglechannel(self, channel, masscalibparameters)
+                    massofcurrentchannel = self.domasscalibrationforasinglechannel(self, channel, masscalibparameters, timebase)
                     tempmassxaxis.append(massofcurrentchannel)
 
                 #plt.fill_between(peaknumberchannels[peak], tempmassspec, alpha=0.7)
                 plt.fill_between(tempmassxaxis, tempmassspec, alpha=0.7)
 
-                calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters)
+                calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters, timebase)
 
                 #plt.annotate(s=str(calibratedmass), xy=(peaknumberchannels[peak][0] - 100, max(tempmassspec) * 0.9))
                 plt.annotate(s=str(calibratedmass), xy=((float(tempmassxaxis[0]) - 0.2), max(tempmassspec) * 1), fontsize=24, rotation=90)
@@ -1329,7 +1338,7 @@ class Doanalysis():
                         tempmassspec.append(summedmassspec[channel])
                     plt.fill_between(peaknumberchannels[peak], tempmassspec, alpha=0.7)
 
-                    calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters)
+                    calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters, timebase)
 
                     plt.annotate(s=str(calibratedmass),
                                  xy=(peaknumberchannels[peak][0] - 100, max(tempmassspec) * 0.9))
@@ -1380,13 +1389,13 @@ class Doanalysis():
                     tempmassspec.append(summedmassspec[channel])
 
                     #get the x-axis value (mass) for the given channel
-                    massofcurrentchannel = self.domasscalibrationforasinglechannel(self, channel, masscalibparameters)
+                    massofcurrentchannel = self.domasscalibrationforasinglechannel(self, channel, masscalibparameters, timebase)
                     tempmassxaxis.append(massofcurrentchannel)
 
                 #plt.fill_between(peaknumberchannels[peak], tempmassspec, alpha=0.7)
                 plt.fill_between(tempmassxaxis, tempmassspec, alpha=0.7)
 
-                calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters)
+                calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters, timebase)
 
                 plt.annotate(s=str(calibratedmass), xy=((float(tempmassxaxis[0]) - 0.2), max(tempmassspec) * 1),
                              fontsize=24, rotation=90)
@@ -1420,7 +1429,7 @@ class Doanalysis():
                         tempmassspec.append(summedmassspec[channel])
                     plt.fill_between(peaknumberchannels[peak], tempmassspec, alpha=0.3)
 
-                    calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters)
+                    calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters, timebase)
 
                     plt.annotate(s=str(calibratedmass), xy=(peaknumberchannels[peak][0] - 40, max(tempmassspec) * 0.9))
 
@@ -1558,7 +1567,7 @@ class Doanalysis():
 
         # os.chdir('..')
 
-    def transformchannelsinmass(self, masscalibvalues):
+    def transformchannelsinmass(self, masscalibvalues, timebase):
         [masscalib1mass, masscalib1time, masscalib2mass, masscalib2time] = masscalibvalues
 
         x = [0, masscalib1time * 0.00001, masscalib2time * 0.00001]
@@ -1578,7 +1587,8 @@ class Doanalysis():
         #
 
         testchannelnr = 42000
-        testchanneltime = testchannelnr * 1 / 2 * 10 ** -9
+        # testchanneltime = testchannelnr * 1 / 2 * 10 ** -9
+        testchanneltime = testchannelnr * timebase
 
         print('testchannelnr 42 000 is at time:', testchanneltime, 'seconds')
 
@@ -1626,13 +1636,13 @@ class Doanalysis():
 
             backgrounddata = readolddata.readoldbackground(self, workingdirectorypath, datafoldername, analysisfolderpath)
 
-            bgsubstrdatalist, summedmassspec = readolddata.readolddata(self, backgrounddata, workingdirectorypath,
+            bgsubstrdatalist, summedmassspec, timebase = readolddata.readolddata(self, backgrounddata, workingdirectorypath,
                                                               datafoldername, analysisfolderpath, progressbarfolder,
                                                               datalengthlimit)
             monofilecontent = readolddata.readoldmonofile(self, workingdirectorypath, datafoldername)
         else:
             print('## ELSE: READ NEW DATA ##')
-            bgsubstrdatalist, summedmassspec = self.readrawdatav2(self, backgrounddata, workingdirectorypath,
+            bgsubstrdatalist, summedmassspec, timebase = self.readrawdatav2(self, backgrounddata, workingdirectorypath,
                                                               datafoldername, analysisfolderpath, progressbarfolder,
                                                               datalengthlimit)
 
@@ -1661,7 +1671,7 @@ class Doanalysis():
 
         Logfile.writelog(Logfile, 'success spectra-normalization,\tnext step: export everything')
 
-        masscalibparameters = self.transformchannelsinmass(self, masscalibvalues)
+        masscalibparameters = self.transformchannelsinmass(self, masscalibvalues, timebase)
 
         print(masscalibparameters)
         massaxis = self.findmassaxis(self, summedmassspec, masscalibparameters)
@@ -1669,7 +1679,7 @@ class Doanalysis():
         self.exportmassspecandspectrum(self, summedmassspec, threshold, plotselectedpeakchannel,
                                        plotselectedpeaksummedmassspec, normalizedspectrum, monofilecontent,
                                        workingdirectorypath, datafoldername, analysisfolderpath, peaknumberchannels,
-                                       masscalibparameters, untergrundboundaries, massaxis, monofilemetacontent)
+                                       masscalibparameters, untergrundboundaries, massaxis, monofilemetacontent, timebase)
 
         Logfile.writelog(Logfile, 'everything exported,\tfinished \n\n')
 

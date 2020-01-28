@@ -38,6 +38,14 @@ def readolddata(self, backgrounddata, workingdirectorypath, datafoldername, anal
                 # print('File Nr.:', element, 'from:', filelist.__len__()-2, '/// line:', i)
                 i = i + 1
                 #print(n, line)
+
+                    ## read Number of Gigasamples:
+                if n == 1:
+                    timebase = float(line.split()[0])
+                    #print('\ttimebase:\t', timebase)
+
+
+
                 if n > 5:
                     bgsubstracteddatapoint = (int(line.replace('\n', "")) - int(backgrounddata[j]))
                     bgsubstrdatalist[element - 1].append(str(bgsubstracteddatapoint))
@@ -48,7 +56,7 @@ def readolddata(self, backgrounddata, workingdirectorypath, datafoldername, anal
                 if i > datalengthlimit:
                     break
 
-    return bgsubstrdatalist, summedmassspec
+    return bgsubstrdatalist, summedmassspec, timebase
 
 
 
