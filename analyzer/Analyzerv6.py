@@ -20,8 +20,10 @@ from Functions import readolddata
 
 #parentdirectorypath = "D:\\Messdaten\\2019_03_ESI_FeBpy\\20190321_MnAcac_Python\\OldData_test"
 #parentdirectorypath = "D:\\Martin\\Messdaten\\20191202_Pyridine_ESI\\exp_python_test"
-parentdirectorypath = "D:\\Martin\\Messdaten\\20191202_Pyridine_ESI\\exp_python_test\\test"
+#parentdirectorypath = "D:\\Martin\\Messdaten\\20191202_Pyridine_ESI\\exp_python_test\\test"
+parentdirectorypath = r"D:\Put\Path\To\_001,_002\Folders\Here"
 
+versiondate = r"29.01.2020"
 
 #       For new installation:
 #               Import / Install the following modules:
@@ -36,7 +38,7 @@ parentdirectorypath = "D:\\Martin\\Messdaten\\20191202_Pyridine_ESI\\exp_python_
 masscalibdefault1 = 56, 2.423
 masscalibdefault2 = 115, 3.468
 
-defaultvalues = [100000, 1.7, 11, 5, masscalibdefault1[1], masscalibdefault1[0], masscalibdefault2[1], masscalibdefault2[0], 16000, 20000]
+defaultvalues = [100000, 1.7, 11, 5, masscalibdefault1[1], masscalibdefault1[0], masscalibdefault2[1], masscalibdefault2[0], 16000, 19000]
 #datalengthlimit, thresholdfactor, minbroadnessofpeak, peakbroadnesstolerance = 100000, 1.7, 11, 5
 #masscalib1time, masscalib1mass, masscalib2time, masscalib2mass = 2.397, 55.0, 2.12, 43.0
 #untergrundchannelfirst, untergrundchannellast = 10000, 30000
@@ -158,6 +160,9 @@ class Fenster(QWidget):
         self.exitbutton.move(width - 170, height - 70)
         self.exitbutton.setFixedSize(150, 50)
         self.exitbutton.clicked.connect(self.beenden)
+
+        self.labelversiondate = QLabel("version date: " + versiondate, self)
+        self.labelversiondate.move(5, 5)
 
         self.labelfolderline = QLabel("Path to the single (_001, _002, _003, ...) data-folders. Have To be clean. No \"_output\" etc", self)
         self.labelfolderline.move(50, 35)
@@ -1044,13 +1049,14 @@ class Doanalysis():
         #calibratedmass = str(round(calibratedmass, 2)).replace('.', 'p')
         return calibratedmass
 
-    def findmassaxis(self, summedmassspec, masscalibparameters):
+    def findmassaxis(self, summedmassspec, masscalibparameters, timebase):
         print('#### here we are mass axis party')
         print('xaxischannellength:\t')
         #print(summedmassspec.__len__())
         massaxis = []
         for channelnumber in range(summedmassspec.__len__()):
-            flighttime = channelnumber * 1 / 2 * 10 ** -9
+            # flighttime = channelnumber * 1 / 2 * 10 ** -9
+            flighttime = channelnumber * timebase
             massaxis.append(masscalibparameters[0] * flighttime ** 2 + flighttime * masscalibparameters[1] + \
                          masscalibparameters[2])
         print('### here we go again, massaxis is:')
@@ -1674,7 +1680,7 @@ class Doanalysis():
         masscalibparameters = self.transformchannelsinmass(self, masscalibvalues, timebase)
 
         print(masscalibparameters)
-        massaxis = self.findmassaxis(self, summedmassspec, masscalibparameters)
+        massaxis = self.findmassaxis(self, summedmassspec, masscalibparameters, timebase)
 
         self.exportmassspecandspectrum(self, summedmassspec, threshold, plotselectedpeakchannel,
                                        plotselectedpeaksummedmassspec, normalizedspectrum, monofilecontent,
