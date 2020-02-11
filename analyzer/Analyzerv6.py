@@ -1016,7 +1016,7 @@ class Doanalysis():
             #print(photonenergy[i], photocurrent[i])
 
         normalizedspectrum = []
-        print('\nNumber of Data Points (Energy Steps):', spectrum.__len__())
+        print('\nNumber of Peaks found in the mass spectrum: ', spectrum.__len__())
 
         for peak in range(spectrum.__len__()):
             #print('Spectrum[peak] length:', spectrum[peak].__len__())
