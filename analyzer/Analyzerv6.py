@@ -21,9 +21,11 @@ from Functions import readolddata
 #parentdirectorypath = "D:\\Messdaten\\2019_03_ESI_FeBpy\\20190321_MnAcac_Python\\OldData_test"
 #parentdirectorypath = "D:\\Martin\\Messdaten\\20191202_Pyridine_ESI\\exp_python_test"
 #parentdirectorypath = "D:\\Martin\\Messdaten\\20191202_Pyridine_ESI\\exp_python_test\\test"
+
 parentdirectorypath = r"D:\Put\Path\To\_001,_002\Folders\Here"
 
-versiondate = r"29.01.2020"
+
+versiondate = r"11.02.2020"
 
 #       For new installation:
 #               Import / Install the following modules:
@@ -226,7 +228,7 @@ class Fenster(QWidget):
          masscalib1time, masscalib1mass, masscalib2time, masscalib2mass,
          untergrundchannelfirst, untergrundchannellast] = setofdata
 
-        print('setofdata after inifile-read at line:', inspect.currentframe().f_lineno, setofdata)
+        #print('setofdata after inifile-read at line:', inspect.currentframe().f_lineno, setofdata)
         # inspect.getframeinfo(currentframe()).lineno
 
         self.labelreadthreshold = QLabel("Peak sensitivity / Threshold Factor", self)
@@ -393,7 +395,7 @@ class Fenster(QWidget):
             self.painter.drawLine(600, settingsareaheight + 160, 960, settingsareaheight + 160)
             self.painter.drawLine(600, settingsareaheight + 260, 960, settingsareaheight + 260)
             self.painter.end()
-            print('performed paint event')
+            print('\nready to go\n')
             globali = globali + 1
 
     def beenden(self):
@@ -415,7 +417,6 @@ class Fenster(QWidget):
         try:
             os.remove(directorytoworkin + "\\_analyzerlogfile.txt")
         except:
-            print('could not delete analyzerlogfile')
             pass
 
         for folder in os.listdir(directorytoworkin):
@@ -423,10 +424,10 @@ class Fenster(QWidget):
             datafoldername = str(workingdirectorypath.split('\\')[-1])
             untergrundfilename = workingdirectorypath + '\\' + datafoldername + '_Untergrund.dat'
             if not os.path.isfile(untergrundfilename):
-                print('no _Untergrund.dat file in folder:\t', workingdirectorypath, 'deleting...')
+                print('no _Untergrund.dat file in folder:\t', workingdirectorypath, '\tdeleting this folder...')
                 shutil.rmtree(workingdirectorypath)
                 alluntergrundfilespresent = alluntergrundfilespresent + 1
-        print('Number of deleted folders:', alluntergrundfilespresent)
+        print('Number of deleted folders:', alluntergrundfilespresent, '\n\n')
 
     #
     #
@@ -587,7 +588,7 @@ class Fenster(QWidget):
 
         settingpackage = self.readfrominputfields()
 
-        print('settingpackage1:', settingpackage)
+        #print('settingpackage1:', settingpackage)
         # print(setofdata)
         # self.finishedevent = QLabel("FINISHED", self)
 
@@ -604,7 +605,7 @@ class Fenster(QWidget):
             workingdirectorypath = str(parentdirectorypath + '\\' + folder)
             datafoldername = str(workingdirectorypath.split('\\')[-1])
             analysisfolderpath = str(workingdirectorypath.replace(datafoldername, '_output_' + datafoldername))
-            print(workingdirectorypath)
+            print('directory we are working in:', workingdirectorypath)
             try:
                 Doanalysis.dosomething(Doanalysis, workingdirectorypath, datafoldername, analysisfolderpath,
                                        self.progressbarfolder, settingpackage, useoldfileformat)
@@ -655,12 +656,12 @@ class Doanalysis():
 
 
     def createanalysisfolder(self, workingdirectorypath, datafoldername, analysisfolderpath):
-        print('Creating analysis folder...')
+        #print('Creating analysis folder...')
 
         # go to the data folder, find the folder above it,
         # check if an analysis folder is there, if yes delete it,
         # and create an analysis folder
-        print(workingdirectorypath)
+        #print(workingdirectorypath)
         os.chdir(workingdirectorypath)
         if os.path.exists(analysisfolderpath):
             shutil.rmtree(analysisfolderpath)
@@ -749,8 +750,8 @@ class Doanalysis():
             logfile.write(
                 time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                     psutil.virtual_memory()) + '\t\tin readbackground next step: read _Untergrund.dat\t\n')
-        print('test_201904091146_1')
-        print(datafoldername)
+        #print('test_201904091146_1')
+        #print(datafoldername)
         with open(datafoldername + '_Untergrund.dat', 'r', encoding="cp1252") as file:
             for line in file:
                 if not line.startswith('#'):
@@ -774,9 +775,9 @@ class Doanalysis():
             bgsubstrdatalist.append([])
 
             with open(datafoldername + '_' + str(element).zfill(3) + '.dat', 'r', encoding="cp1252") as file:
-                print('open file: ', datafoldername + '_' + str(element).zfill(3) + '.dat of insgesamt',
+                print('\topen file: ', datafoldername + '_' + str(element).zfill(3) + '.dat of insgesamt',
                       filelist.__len__() - 2)
-                print('readrawdatav2, element:', element, '\t\ttotal number of files:', filelist.__len__() - 2)
+                #print('readrawdatav2, element:', element, '\t\ttotal number of files:', filelist.__len__() - 2)
                 progressbarfolder.setValue(round(element / (filelist.__len__() - 2) * 100))
 
                 #
@@ -815,6 +816,9 @@ class Doanalysis():
                     ################################################################################################
 
         return bgsubstrdatalist, summedmassspec, timebase
+
+
+
 
     def backgroundsubstraction(self, rawdatalist, backgrounddata):
         bglist = []
@@ -1012,21 +1016,16 @@ class Doanalysis():
             #print(photonenergy[i], photocurrent[i])
 
         normalizedspectrum = []
-        print('Spectrum Length:', spectrum.__len__())
-        #print('Spectrum complete:', spectrum)
-        print('Photonfluxnorm length:', photonfluxnorm.__len__())
-        print('photonflux length:', photonflux.__len__())
-        #print('photonflux first value:', photonflux[0])
-        #print('photonflux last value:', photonflux[-1])
+        print('\nNumber of Data Points (Energy Steps):', spectrum.__len__())
 
         for peak in range(spectrum.__len__()):
-            print('Spectrum[peak] length:', spectrum[peak].__len__())
+            #print('Spectrum[peak] length:', spectrum[peak].__len__())
 
             normalizedspectrum.append([])
             for i in range(spectrum[peak].__len__()):
                 normalizedspectrum[peak].append(spectrum[peak][i] / photonfluxnorm[i])
                 #print(photonfluxnorm[i], spectrum[peak][i], normalizedspectrum[peak][i], normalizedspectrum[peak][i]/spectrum[peak][i], sep ="\t\t")
-        print('spectrum successfully normalized. returning now')
+        print('Normalization of Absorption-Spectra done with Incoming Photocurrent / Number of Photons')
         return normalizedspectrum
 
     def domasscalibration(self, currentmasschannels, masscalibparameters, timebase):
@@ -1050,8 +1049,8 @@ class Doanalysis():
         return calibratedmass
 
     def findmassaxis(self, summedmassspec, masscalibparameters, timebase):
-        print('#### here we are mass axis party')
-        print('xaxischannellength:\t')
+        #print('#### here we are mass axis party')
+        #print('xaxischannellength:\t')
         #print(summedmassspec.__len__())
         massaxis = []
         for channelnumber in range(summedmassspec.__len__()):
@@ -1059,7 +1058,7 @@ class Doanalysis():
             flighttime = channelnumber * timebase
             massaxis.append(masscalibparameters[0] * flighttime ** 2 + flighttime * masscalibparameters[1] + \
                          masscalibparameters[2])
-        print('### here we go again, massaxis is:')
+        #print('### here we go again, massaxis is:')
         #print(massaxis)
         return massaxis
 
@@ -1068,6 +1067,8 @@ class Doanalysis():
                                   datafoldername, analysisfolderpath, peaknumberchannels, masscalibparameters,
                                   untergrundboundaries, massaxis, monofilemetacontent, timebase):
 
+        print('\n\n-- starting export of data --')
+        print('\texporting absorption spectra in .txt files')
         if spectrum.__len__() == 0:
             with open('_ERROOOR.txt', 'a') as file:
                 file.write('there is an empty list of sprectra. probably no peaks were found (decrease sensitivity?)\n')
@@ -1100,8 +1101,7 @@ class Doanalysis():
 
             os.chdir('..')
 
-
-
+            print('\texporting total mass spectrum and channelnumbers for identified peaks in .txt files')
 
             os.mkdir('massspec_export')
             os.chdir('massspec_export')
@@ -1170,6 +1170,8 @@ class Doanalysis():
 
                 ######### Plot all Spectra in one image
 
+            print('\texporting absorption spectra in .png files')
+
             plt.figure(figsize=(7, 4))
             plt.figure.max_open_warning: 40
             for i in range(spectrum.__len__()):
@@ -1195,7 +1197,7 @@ class Doanalysis():
             tempspec = []
 
             with open(datafoldername + '_summed_spec.txt', 'a') as file:
-                print(datafoldername + '_summed_spec.txt')
+                #print(datafoldername + '_summed_spec.txt')
                 file.write(datafoldername + '_summed_Energie\t' + datafoldername + '_summed_Normiert\n')
                 for datapoint in range(spectrum[0].__len__()):
                     tempdatapoint = 0
@@ -1252,6 +1254,8 @@ class Doanalysis():
                         psutil.virtual_memory()) + '\t\tin export next step: plot MS image: big overview\t\n')
 
                 ######### General Overview over summed Massspec
+
+        print('\texporting mass spectra in .png files')
 
         try:
             plt.figure(figsize=(60, 10))
@@ -1458,7 +1462,7 @@ class Doanalysis():
         #
         #
 
-        print('writing log before Untergrund')
+        #print('writing log before Untergrund')
 
         with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
             logfile.write(
@@ -1466,7 +1470,7 @@ class Doanalysis():
                     "%d.%m.%Y %H:%M:%S") + '\t' + str(
                     psutil.virtual_memory()) + '\t\tin export next step: plot MS image: range of Untergrund\t\n')
 
-        print('wrote log before Untergrund, going to Untergrund')
+        #print('wrote log before Untergrund, going to Untergrund')
 
         try:
 
@@ -1580,28 +1584,29 @@ class Doanalysis():
         y = [0, masscalib1mass, masscalib2mass]
 
         masscalibfitparameters = np.polyfit(x, y, 2)
+        mass_calibration_string = 'Masscalibration parameters:\t' + str(round(masscalibfitparameters[0], 1)) + ' * Flighttime (i.e. Channelnumber/Time per Channel [0.5 ns?]) ^ 2 + ' + str(round(masscalibfitparameters[1], 5)) + ' * Flighttime (i.e. Channelnumber/Time per Channel [0.5 ns?]) + ' + str(masscalibfitparameters[2]) + '\t(this can also be found in the logfile)'
+        print(mass_calibration_string)
+        Logfile.writelog(Logfile, mass_calibration_string)
 
-        print('masscalibfit parameters:', masscalibfitparameters)
-
-        print('masscalibfit parameter 1:', masscalibfitparameters[0])
-        print('masscalibfit parameter 2:', masscalibfitparameters[1])
-        print('masscalibfit parameter 3:', masscalibfitparameters[2])
+        #print('masscalibfit parameter 1:', masscalibfitparameters[0])
+        #print('masscalibfit parameter 2:', masscalibfitparameters[1])
+        #print('masscalibfit parameter 3:', masscalibfitparameters[2])
 
         #
         #   here we calculate the dependence between the Sampling Rate (i.e. 2 Gigasamples (GS) per Second
         #   thus, one Sample (i.e. one Channel) has the length of 1/2 nanosecond
         #
 
-        testchannelnr = 42000
+        #testchannelnr = 42000
         # testchanneltime = testchannelnr * 1 / 2 * 10 ** -9
-        testchanneltime = testchannelnr * timebase
+        #testchanneltime = testchannelnr * timebase
 
-        print('testchannelnr 42 000 is at time:', testchanneltime, 'seconds')
+        #print('testchannelnr 42 000 is at time:', testchanneltime, 'seconds')
 
-        print('mass for channel >>', testchannelnr, '<< is:',
-              masscalibfitparameters[0] * testchanneltime ** 2 +
-              masscalibfitparameters[1] * testchanneltime +
-              masscalibfitparameters[2])
+        #print('mass for channel >>', testchannelnr, '<< is:',
+        #      masscalibfitparameters[0] * testchanneltime ** 2 +
+        #      masscalibfitparameters[1] * testchanneltime +
+        #      masscalibfitparameters[2])
 
         return [masscalibfitparameters[0], masscalibfitparameters[1], masscalibfitparameters[2]]
 
@@ -1614,7 +1619,7 @@ class Doanalysis():
         masscalibvalues = [masscalib1mass, masscalib1time, masscalib2mass, masscalib2time]
         untergrundboundaries = [untergrundlowerboundary, untergrundupperboundary]
 
-        print('settingpackage2:', settingpackage)
+        print('Parameters for the sensitivity and mass calibration and background and so on:', settingpackage)
 
         Logfile.writelog(Logfile, 'start working in folder: ' + analysisfolderpath + '\\' + datafoldername)
 
@@ -1626,6 +1631,8 @@ class Doanalysis():
 
         Logfile.writelog(Logfile, 'analysis folder created,\tnext step: read monofilecontent')
 
+        print('\n\nstart reading Monofile, then Background, then the Data')
+
         monofilecontent, monofilemetacontent = self.readmonofile2(self, workingdirectorypath, datafoldername)
 
         Logfile.writelog(Logfile, 'monofilecontent read,\tnext step: read backgroundfile')
@@ -1636,9 +1643,9 @@ class Doanalysis():
 
         #olddata = True
 
-        print('## HERE IT COMES: ##')
+        #print('## HERE IT COMES: ##')
         if useoldfileformat == True:
-            print('## READ OLD DATA ##')
+            print('-- READ OLD DATA --')
 
             backgrounddata = readolddata.readoldbackground(self, workingdirectorypath, datafoldername, analysisfolderpath)
 
@@ -1647,7 +1654,7 @@ class Doanalysis():
                                                               datalengthlimit)
             monofilecontent = readolddata.readoldmonofile(self, workingdirectorypath, datafoldername)
         else:
-            print('## ELSE: READ NEW DATA ##')
+            print('-- start reading data --')
             bgsubstrdatalist, summedmassspec, timebase = self.readrawdatav2(self, backgrounddata, workingdirectorypath,
                                                               datafoldername, analysisfolderpath, progressbarfolder,
                                                               datalengthlimit)
@@ -1679,7 +1686,7 @@ class Doanalysis():
 
         masscalibparameters = self.transformchannelsinmass(self, masscalibvalues, timebase)
 
-        print(masscalibparameters)
+        #print(masscalibparameters)
         massaxis = self.findmassaxis(self, summedmassspec, masscalibparameters, timebase)
 
         self.exportmassspecandspectrum(self, summedmassspec, threshold, plotselectedpeakchannel,
