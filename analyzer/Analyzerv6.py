@@ -25,7 +25,7 @@ from Functions import readolddata
 parentdirectorypath = r"D:\Put\Path\To\_001,_002\Folders\Here"
 
 
-versiondate = r"11.02.2020"
+versiondate = r"02.03.2020"
 
 #       For new installation:
 #               Import / Install the following modules:
@@ -1134,7 +1134,7 @@ class Doanalysis():
                         psutil.virtual_memory()) + '\t\tin export next step: create channel list for individual peaks\t\n')
 
             # create MASS SPEC txt file for individual peaks
-            # i = 0
+            i = 0
             for peak in range(peaknumberchannels.__len__()):
                 # print('line nr.:', inspect.currentframe().f_lineno)
                 calibratedmass = self.domasscalibration(self, peaknumberchannels[peak], masscalibparameters, timebase)
@@ -1144,12 +1144,15 @@ class Doanalysis():
                     # print('line nr.:', inspect.currentframe().f_lineno)
 
                     for channel in range(peaknumberchannels[peak].__len__()):
+
                         # print('line nr.:', inspect.currentframe().f_lineno)
 
-                        file.write(str(plotselectedpeakchannel[channel]) + '\n')
+                        file.write(str(plotselectedpeakchannel[i]) + '\n')
+                        i = i + 1
                         # print('line nr.:', inspect.currentframe().f_lineno)
 
                         # i = i + 1
+
 
             os.chdir('..')
 
