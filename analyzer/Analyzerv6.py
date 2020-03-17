@@ -189,7 +189,9 @@ class Fenster(QWidget):
         self.progressbaroverall.setGeometry(150, 400, 300, 20)
 
         self.checkfoldersbutton = QPushButton('Check if Folders have "_Untergrund.dat" File', self)
-        self.checkfoldersbutton.setStyleSheet("background-color: rgb(255, 204, 102)")
+        #self.checkfoldersbutton.setStyleSheet("background-color: rgb(255, 204, 102)")
+        self.checkfoldersbutton.setStyleSheet("background-color: rgb(199, 199, 199)")
+
         self.checkfoldersbutton.move(250, 100)
         self.checkfoldersbutton.clicked.connect(self.checkfolders)
 
@@ -201,7 +203,8 @@ class Fenster(QWidget):
 
         self.deleteoutputfolderbutton = QPushButton('Delete Output Folders', self)
         self.deleteoutputfolderbutton.move(250, 250)
-        self.deleteoutputfolderbutton.setStyleSheet("background-color: rgb(102, 153, 255)")
+        #self.deleteoutputfolderbutton.setStyleSheet("background-color: rgb(102, 153, 255)")
+        self.deleteoutputfolderbutton.setStyleSheet("background-color: rgb(199, 199, 199)")
         self.deleteoutputfolderbutton.clicked.connect(self.deleteoutputfolder)
 
         self.analysisbutton = QPushButton('Do Analysis', self)
