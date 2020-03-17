@@ -5,7 +5,7 @@ from PyQt5.QtCore import *
 
 
 def readolddata(self, backgrounddata, workingdirectorypath, datafoldername, analysisfolderpath, progressbarfolder,
-                  datalengthlimit):
+                  datalengthlimit, parentdirectorypath):
     filelist = []
     bgsubstrdatalist = []
     summedmassspec = []
@@ -70,7 +70,7 @@ def readolddata(self, backgrounddata, workingdirectorypath, datafoldername, anal
 
 
 
-def readoldmonofile(self, workingdirectorypath, datafoldername):
+def readoldmonofile(self, workingdirectorypath, datafoldername, parentdirectorypath):
     print('## reading old mono file ##')
     os.chdir(workingdirectorypath)
 
@@ -109,7 +109,7 @@ def readoldmonofile(self, workingdirectorypath, datafoldername):
 # 3 and 5
 
 
-def readoldbackground(self, workingdirectorypath, datafoldername, analysisfolderpath):
+def readoldbackground(self, workingdirectorypath, datafoldername, analysisfolderpath, parentdirectorypath):
 
     os.chdir(workingdirectorypath)
 

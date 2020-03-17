@@ -25,7 +25,7 @@ from Functions import readolddata
 parentdirectorypath = r"D:\Put\Path\To\_001,_002\Folders\Here"
 
 
-versiondate = r"02.03.2020"
+versiondate = r"17.03.2020"
 
 #       For new installation:
 #               Import / Install the following modules:
@@ -139,8 +139,8 @@ GaAsPhotodiode = [
 
 
 class Logfile():
-    def writelog(self, transportstring):
-        with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+    def writelog(self, parentdirectorypath, transportstring):
+        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
             logfile.write(time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                 psutil.virtual_memory()) + '\t' + transportstring + '\n')
 
@@ -441,9 +441,9 @@ class Fenster(QWidget):
                 inifilecontent = inifile.readlines()
         except FileNotFoundError:
             print('inifile not found')
-            with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
-                logfile.write(time.strftime("%d.%m.%Y %H:%M:%S") + str(psutil.virtual_memory()) + '\t' +
-                              '\tinifile.txt not found in analyzer.exe/.py folder. Used default values\n\n')
+            ###with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+            ###    logfile.write(time.strftime("%d.%m.%Y %H:%M:%S") + str(psutil.virtual_memory()) + '\t' +
+            ###                  '\tinifile.txt not found in analyzer.exe/.py folder. Used default values\n\n')
             inifilecontent = []
 
         # default values if inifile-readout does not work:
@@ -458,28 +458,28 @@ class Fenster(QWidget):
                     wordsinline = line.replace(' ', '').replace('\n', '').split('=')
                     datalengthlimit = int(wordsinline[-1])
                 except ValueError:
-                    Logfile.writelog(Logfile, 'datalengthlimit inifile valueError\n')
+                    Logfile.writelog(Logfile, parentdirectorypath, 'datalengthlimit inifile valueError\n')
                     pass
             if line.startswith('thresholdfactor = '):
                 try:
                     wordsinline = line.replace(' ', '').replace('\n', '').split('=')
                     thresholdfactor = float(wordsinline[-1])
                 except ValueError:
-                    Logfile.writelog(Logfile, 'thresholdfactor inifile valueError\n')
+                    Logfile.writelog(Logfile, parentdirectorypath, 'thresholdfactor inifile valueError\n')
                     pass
             if line.startswith('minbroadnessofpeak = '):
                 try:
                     wordsinline = line.replace(' ', '').replace('\n', '').split('=')
                     minbroadnessofpeak = int(wordsinline[-1])
                 except ValueError:
-                    Logfile.writelog(Logfile, 'minbroadnessofpeak inifile valueError\n')
+                    Logfile.writelog(Logfile, parentdirectorypath, 'minbroadnessofpeak inifile valueError\n')
                     pass
             if line.startswith('peakbroadnesstolerance = '):
                 try:
                     wordsinline = line.replace(' ', '').replace('\n', '').split('=')
                     peakbroadnesstolerance = int(wordsinline[-1])
                 except ValueError:
-                    Logfile.writelog(Logfile, 'peakbroadnesstolerance inifile valueError\n')
+                    Logfile.writelog(Logfile, parentdirectorypath, 'peakbroadnesstolerance inifile valueError\n')
                     pass
 
             if line.startswith('masscalib1time = '):
@@ -487,42 +487,42 @@ class Fenster(QWidget):
                     wordsinline = line.replace(' ', '').replace('\n', '').split('=')
                     masscalib1time = float(wordsinline[-1])
                 except ValueError:
-                    Logfile.writelog(Logfile, 'masscalib1time inifile valueError\n')
+                    Logfile.writelog(Logfile, parentdirectorypath, 'masscalib1time inifile valueError\n')
                     pass
             if line.startswith('masscalib1mass = '):
                 try:
                     wordsinline = line.replace(' ', '').replace('\n', '').split('=')
                     masscalib1mass = float(wordsinline[-1])
                 except ValueError:
-                    Logfile.writelog(Logfile, 'masscalib1mass inifile valueError\n')
+                    Logfile.writelog(Logfile, parentdirectorypath, 'masscalib1mass inifile valueError\n')
                     pass
             if line.startswith('masscalib2time = '):
                 try:
                     wordsinline = line.replace(' ', '').replace('\n', '').split('=')
                     masscalib2time = float(wordsinline[-1])
                 except ValueError:
-                    Logfile.writelog(Logfile, 'masscalib2time inifile valueError\n')
+                    Logfile.writelog(Logfile, parentdirectorypath, 'masscalib2time inifile valueError\n')
                     pass
             if line.startswith('masscalib2mass = '):
                 try:
                     wordsinline = line.replace(' ', '').replace('\n', '').split('=')
                     masscalib2mass = float(wordsinline[-1])
                 except ValueError:
-                    Logfile.writelog(Logfile, 'masscalib2mass inifile valueError\n')
+                    Logfile.writelog(Logfile, parentdirectorypath, 'masscalib2mass inifile valueError\n')
                     pass
             if line.startswith('untergrundchannelfirst = '):
                 try:
                     wordsinline = line.replace(' ', '').replace('\n', '').split('=')
                     untergrundchannelfirst = int(wordsinline[-1])
                 except ValueError:
-                    Logfile.writelog(Logfile, 'untergrundchannelfirst inifile valueError\n')
+                    Logfile.writelog(Logfile, parentdirectorypath, 'untergrundchannelfirst inifile valueError\n')
                     pass
             if line.startswith('untergrundchannellast = '):
                 try:
                     wordsinline = line.replace(' ', '').replace('\n', '').split('=')
                     untergrundchannellast = int(wordsinline[-1])
                 except ValueError:
-                    Logfile.writelog(Logfile, 'untergrundchannellast inifile valueError\n')
+                    Logfile.writelog(Logfile, parentdirectorypath, 'untergrundchannellast inifile valueError\n')
                     pass
 
         # here we have read out a lot of data from the ini file
@@ -600,6 +600,10 @@ class Fenster(QWidget):
         allfolders = []
         for folder in os.listdir(parentdirectorypath):
             allfolders.append(folder)
+        try:
+            allfolders.remove('_analyzerlogfile.txt')
+        except:
+            pass
 
         for folder in allfolders:
             workingdirectorypath = str(parentdirectorypath + '\\' + folder)
@@ -608,12 +612,12 @@ class Fenster(QWidget):
             print('directory we are working in:', workingdirectorypath)
             try:
                 Doanalysis.dosomething(Doanalysis, workingdirectorypath, datafoldername, analysisfolderpath,
-                                       self.progressbarfolder, settingpackage, useoldfileformat)
+                                       self.progressbarfolder, settingpackage, useoldfileformat, parentdirectorypath)
             except:
                 errorcode = sys.exc_info()
                 print("Unexpected error:", errorcode)
                 try:
-                    with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+                    with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
                         logfile.write(
                             time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                                 psutil.virtual_memory()) + '\n\n\t' + str(errorcode) + '\n\n\n')
@@ -634,10 +638,10 @@ class Fenster(QWidget):
 
         # final step: copy log file into the parent directory folder
 
-        try:
-            shutil.copyfile("D:\\_analyzerlogfile.txt", parentdirectorypath + "\\_analyzerlogfile.txt")
-        except:
-            print('Error copying analyzer file:', sys.exc_info())
+        #try:
+        #    shutil.copyfile("D:\\_analyzerlogfile.txt", parentdirectorypath + "\\_analyzerlogfile.txt")
+        #except:
+        #    print('Error copying analyzer file:', sys.exc_info())
 
     def checkfolders(self):
         directorytoworkin = str(self.folderline.text())
@@ -730,23 +734,23 @@ class Doanalysis():
 
         return monofilecontent, monofilemetacontent
 
-    def readbackground(self, workingdirectorypath, datafoldername, analysisfolderpath):
+    def readbackground(self, workingdirectorypath, datafoldername, analysisfolderpath, parentdirectorypath):
 
-        with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
             logfile.write(
                 time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                     psutil.virtual_memory()) + '\t\tin readbackground next step: chdir\t\n')
 
         os.chdir(workingdirectorypath)
 
-        with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
             logfile.write(
                 time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                     psutil.virtual_memory()) + '\t\tin readbackground next step: create emptylist bgdata\t\n')
 
         backgrounddata = []
 
-        with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
             logfile.write(
                 time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                     psutil.virtual_memory()) + '\t\tin readbackground next step: read _Untergrund.dat\t\n')
@@ -757,7 +761,7 @@ class Doanalysis():
                 if not line.startswith('#'):
                     backgrounddata.append(line.replace('\n', ""))
 
-        with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
             logfile.write(
                 time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                     psutil.virtual_memory()) + '\t\tin readbackground next step: return bgdata\t\n')
@@ -765,7 +769,7 @@ class Doanalysis():
         return backgrounddata
 
     def readrawdatav2(self, backgrounddata, workingdirectorypath, datafoldername, analysisfolderpath, progressbarfolder,
-                      datalengthlimit):
+                      datalengthlimit, parentdirectorypath):
         filelist = []
         bgsubstrdatalist = []
         summedmassspec = []
@@ -1065,7 +1069,7 @@ class Doanalysis():
     def exportmassspecandspectrum(self, summedmassspec, threshold, plotselectedpeakchannel,
                                   plotselectedpeaksummedmassspec, spectrum, monofilecontent, workingdirectorypath,
                                   datafoldername, analysisfolderpath, peaknumberchannels, masscalibparameters,
-                                  untergrundboundaries, massaxis, monofilemetacontent, timebase):
+                                  untergrundboundaries, massaxis, monofilemetacontent, timebase, parentdirectorypath):
 
         print('\n\n-- starting export of data --')
         print('\texporting absorption spectra in .txt files')
@@ -1080,7 +1084,7 @@ class Doanalysis():
             os.mkdir('data_export')
             os.chdir('data_export')
 
-            with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                         psutil.virtual_memory()) + '\t\tin export next step: export spectra for all peaks\t\n')
@@ -1106,7 +1110,7 @@ class Doanalysis():
             os.mkdir('massspec_export')
             os.chdir('massspec_export')
 
-            with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                         psutil.virtual_memory()) + '\t\tin export next step: export MS overall sum\t\n')
@@ -1117,7 +1121,7 @@ class Doanalysis():
                 for channel in range(summedmassspec.__len__()):
                     file.write(str(massaxis[channel]) + '\t' + str(summedmassspec[channel]) + '\n')
 
-            with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                         psutil.virtual_memory()) + '\t\tin export next step: export global channel list, which peaks contribute\t\n')
@@ -1128,7 +1132,7 @@ class Doanalysis():
                 for channel in range(plotselectedpeakchannel.__len__()):
                     file.write(str(plotselectedpeakchannel[channel]) + '\n')
 
-            with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                         psutil.virtual_memory()) + '\t\tin export next step: create channel list for individual peaks\t\n')
@@ -1156,7 +1160,7 @@ class Doanalysis():
 
             os.chdir('..')
 
-            with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                         psutil.virtual_memory()) + '\t\tin export next step: read the photonenergy out of mono file\t\n')
@@ -1165,7 +1169,7 @@ class Doanalysis():
             for monofileline in monofilecontent:
                 photonenergy.append(float(monofileline[3]))
 
-            with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime(
                         "%d.%m.%Y %H:%M:%S") + '\t' + str(
@@ -1192,7 +1196,7 @@ class Doanalysis():
 
             # export summed up absorption spectrum .txt      20190510
 
-            with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                         psutil.virtual_memory()) + '\t\tin export next step: plot image: sum over all fragments txt and png\t\n')
@@ -1222,7 +1226,7 @@ class Doanalysis():
             del tempspec
 
 
-            with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                         psutil.virtual_memory()) + '\t\tin export next step: plot image: one spectrum for each peak\t\n')
@@ -1250,7 +1254,7 @@ class Doanalysis():
                 plt.close()
                 gc.collect()
 
-            with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime(
                         "%d.%m.%Y %H:%M:%S") + '\t' + str(
@@ -1364,7 +1368,7 @@ class Doanalysis():
                 with open('___ERROR.txt', 'a') as file:
                     file.write('couldn\'t print low res overview mass spec\n')
 
-        with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
             logfile.write(
                 time.strftime(
                     "%d.%m.%Y %H:%M:%S") + '\t' + str(
@@ -1467,7 +1471,7 @@ class Doanalysis():
 
         #print('writing log before Untergrund')
 
-        with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
             logfile.write(
                 time.strftime(
                     "%d.%m.%Y %H:%M:%S") + '\t' + str(
@@ -1539,7 +1543,7 @@ class Doanalysis():
                     file.write('couldn\'t print low res mass spec with Untergrund Area\n')
             # plt.legend(i)
 
-        with open('D:\\_analyzerlogfile.txt', 'a') as logfile:
+        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
             logfile.write(
                 time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                     psutil.virtual_memory()) + '\t\tin export next step: export meta data and photo current curve\t\n')
@@ -1580,7 +1584,7 @@ class Doanalysis():
 
         # os.chdir('..')
 
-    def transformchannelsinmass(self, masscalibvalues, timebase):
+    def transformchannelsinmass(self, masscalibvalues, timebase, parentdirectorypath):
         [masscalib1mass, masscalib1time, masscalib2mass, masscalib2time] = masscalibvalues
 
         x = [0, masscalib1time * 0.00001, masscalib2time * 0.00001]
@@ -1589,7 +1593,7 @@ class Doanalysis():
         masscalibfitparameters = np.polyfit(x, y, 2)
         mass_calibration_string = 'Masscalibration parameters:\t' + str(round(masscalibfitparameters[0], 1)) + ' * Flighttime (i.e. Channelnumber/Time per Channel [0.5 ns?]) ^ 2 + ' + str(round(masscalibfitparameters[1], 5)) + ' * Flighttime (i.e. Channelnumber/Time per Channel [0.5 ns?]) + ' + str(masscalibfitparameters[2]) + '\t(this can also be found in the logfile)'
         print(mass_calibration_string)
-        Logfile.writelog(Logfile, mass_calibration_string)
+        Logfile.writelog(Logfile, parentdirectorypath, mass_calibration_string)
 
         #print('masscalibfit parameter 1:', masscalibfitparameters[0])
         #print('masscalibfit parameter 2:', masscalibfitparameters[1])
@@ -1613,7 +1617,7 @@ class Doanalysis():
 
         return [masscalibfitparameters[0], masscalibfitparameters[1], masscalibfitparameters[2]]
 
-    def dosomething(self, workingdirectorypath, datafoldername, analysisfolderpath, progressbarfolder, settingpackage, useoldfileformat):
+    def dosomething(self, workingdirectorypath, datafoldername, analysisfolderpath, progressbarfolder, settingpackage, useoldfileformat, parentdirectorypath):
 
         [datalengthlimit, thresholdfactor, minbroadnessofpeak, peakbroadnesstolerance,
          masscalib1mass, masscalib1time, masscalib2mass, masscalib2time,
@@ -1624,25 +1628,25 @@ class Doanalysis():
 
         print('Parameters for the sensitivity and mass calibration and background and so on:', settingpackage)
 
-        Logfile.writelog(Logfile, 'start working in folder: ' + analysisfolderpath + '\\' + datafoldername)
+        Logfile.writelog(Logfile, parentdirectorypath, 'start working in folder: ' + analysisfolderpath + '\\' + datafoldername)
 
-        Logfile.writelog(Logfile, "[datalengthlimit, thresholdfactor, minbroadnessofpeak, peakbroadnesstolerance, masscalib1mass, masscalib1time, masscalib2mass, masscalib2time, untergrundlowerboundary, untergrundupperboundary]" + str(settingpackage))
+        Logfile.writelog(Logfile, parentdirectorypath, "[datalengthlimit, thresholdfactor, minbroadnessofpeak, peakbroadnesstolerance, masscalib1mass, masscalib1time, masscalib2mass, masscalib2time, untergrundlowerboundary, untergrundupperboundary]" + str(settingpackage))
 
-        Logfile.writelog(Logfile, 'analysis button pressed,\tnext step: createanalysis folder')
+        Logfile.writelog(Logfile, parentdirectorypath, 'analysis button pressed,\tnext step: createanalysis folder')
 
         self.createanalysisfolder(self, workingdirectorypath, datafoldername, analysisfolderpath)
 
-        Logfile.writelog(Logfile, 'analysis folder created,\tnext step: read monofilecontent')
+        Logfile.writelog(Logfile, parentdirectorypath, 'analysis folder created,\tnext step: read monofilecontent')
 
         print('\n\nstart reading Monofile, then Background, then the Data')
 
         monofilecontent, monofilemetacontent = self.readmonofile2(self, workingdirectorypath, datafoldername)
 
-        Logfile.writelog(Logfile, 'monofilecontent read,\tnext step: read backgroundfile')
+        Logfile.writelog(Logfile, parentdirectorypath, 'monofilecontent read,\tnext step: read backgroundfile')
 
-        backgrounddata = self.readbackground(self, workingdirectorypath, datafoldername, analysisfolderpath)
+        backgrounddata = self.readbackground(self, workingdirectorypath, datafoldername, analysisfolderpath, parentdirectorypath)
 
-        Logfile.writelog(Logfile, 'bg data read,\tnext step: big read data v2 procedure')
+        Logfile.writelog(Logfile, parentdirectorypath, 'bg data read,\tnext step: big read data v2 procedure')
 
         #olddata = True
 
@@ -1650,44 +1654,44 @@ class Doanalysis():
         if useoldfileformat == True:
             print('-- READ OLD DATA --')
 
-            backgrounddata = readolddata.readoldbackground(self, workingdirectorypath, datafoldername, analysisfolderpath)
+            backgrounddata = readolddata.readoldbackground(self, workingdirectorypath, datafoldername, analysisfolderpath, parentdirectorypath)
 
             bgsubstrdatalist, summedmassspec, timebase = readolddata.readolddata(self, backgrounddata, workingdirectorypath,
                                                               datafoldername, analysisfolderpath, progressbarfolder,
-                                                              datalengthlimit)
-            monofilecontent = readolddata.readoldmonofile(self, workingdirectorypath, datafoldername)
+                                                              datalengthlimit, parentdirectorypath)
+            monofilecontent = readolddata.readoldmonofile(self, workingdirectorypath, datafoldername, parentdirectorypath)
         else:
             print('-- start reading data --')
             bgsubstrdatalist, summedmassspec, timebase = self.readrawdatav2(self, backgrounddata, workingdirectorypath,
                                                               datafoldername, analysisfolderpath, progressbarfolder,
-                                                              datalengthlimit)
+                                                              datalengthlimit, parentdirectorypath)
 
-        Logfile.writelog(Logfile, 'readrawdatav2 success,\tnext step: calc threshold')
+        Logfile.writelog(Logfile, parentdirectorypath, 'readrawdatav2 success,\tnext step: calc threshold')
 
         threshold = self.detectthreshold(self, summedmassspec, thresholdfactor, analysisfolderpath)
 
-        Logfile.writelog(Logfile, 'threshold success,\tnext step: find peak channels')
+        Logfile.writelog(Logfile, parentdirectorypath, 'threshold success,\tnext step: find peak channels')
 
         peakchannels = self.findpeakpositions(self, summedmassspec, threshold, minbroadnessofpeak)
 
-        Logfile.writelog(Logfile, 'peak channels found,\tnext step: count as peak numbers')
+        Logfile.writelog(Logfile, parentdirectorypath, 'peak channels found,\tnext step: count as peak numbers')
 
         peaknumberchannels, plotselectedpeakchannel, plotselectedpeaksummedmassspec = self.definepeaknumber(self,
                                                                                                             summedmassspec,
                                                                                                             peakchannels,
                                                                                                             peakbroadnesstolerance)
 
-        Logfile.writelog(Logfile, 'peak numbers assigned,\tnext step: calculate raw spectra')
+        Logfile.writelog(Logfile, parentdirectorypath, 'peak numbers assigned,\tnext step: calculate raw spectra')
 
         spectrum = self.calculatespectrum(self, peaknumberchannels, bgsubstrdatalist, untergrundboundaries)
 
-        Logfile.writelog(Logfile, 'raw spectrum calculated,\tnext step: normalized with photon flux')
+        Logfile.writelog(Logfile, parentdirectorypath, 'raw spectrum calculated,\tnext step: normalized with photon flux')
 
         normalizedspectrum = self.normalizespectrum(self, spectrum, monofilecontent)
 
-        Logfile.writelog(Logfile, 'success spectra-normalization,\tnext step: export everything')
+        Logfile.writelog(Logfile, parentdirectorypath, 'success spectra-normalization,\tnext step: export everything')
 
-        masscalibparameters = self.transformchannelsinmass(self, masscalibvalues, timebase)
+        masscalibparameters = self.transformchannelsinmass(self, masscalibvalues, timebase, parentdirectorypath)
 
         #print(masscalibparameters)
         massaxis = self.findmassaxis(self, summedmassspec, masscalibparameters, timebase)
@@ -1695,18 +1699,18 @@ class Doanalysis():
         self.exportmassspecandspectrum(self, summedmassspec, threshold, plotselectedpeakchannel,
                                        plotselectedpeaksummedmassspec, normalizedspectrum, monofilecontent,
                                        workingdirectorypath, datafoldername, analysisfolderpath, peaknumberchannels,
-                                       masscalibparameters, untergrundboundaries, massaxis, monofilemetacontent, timebase)
+                                       masscalibparameters, untergrundboundaries, massaxis, monofilemetacontent, timebase, parentdirectorypath)
 
-        Logfile.writelog(Logfile, 'everything exported,\tfinished \n\n')
+        Logfile.writelog(Logfile, parentdirectorypath, 'everything exported,\tfinished \n\n')
 
         print('\ndid stuff...')
         del spectrum, normalizedspectrum, peaknumberchannels, plotselectedpeakchannel, plotselectedpeaksummedmassspec, peakchannels, threshold, bgsubstrdatalist, summedmassspec, backgrounddata, monofilecontent
 
 
 def main():
-    with open('D:\\_analyzerlogfile.txt', 'w') as logfile:
-        logfile.write(time.strftime("%d.%m.%Y %H:%M:%S") + str(
-            psutil.virtual_memory()) + '\t' + '\n\n########################\ninitialize program\n######################\n\n')
+    #with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'w') as logfile:
+    #    logfile.write(time.strftime("%d.%m.%Y %H:%M:%S") + str(
+    #        psutil.virtual_memory()) + '\t' + '\n\n########################\ninitialize program\n######################\n\n')
     app = QApplication(sys.argv)
     w = Fenster()
 
