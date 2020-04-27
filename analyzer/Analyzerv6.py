@@ -734,7 +734,7 @@ class Doanalysis():
                     for elementdata in elementline.split('\t'):
                         monofilecontent[i].append(elementdata)
                     i = i + 1
-
+        print(monofilecontent[0])
         return monofilecontent, monofilemetacontent
 
     def readbackground(self, workingdirectorypath, datafoldername, analysisfolderpath, parentdirectorypath):
@@ -993,8 +993,24 @@ class Doanalysis():
         photonflux = []
         # print(monofilecontent)
         for line in range(monofilecontent.__len__()):
-            photocurrent.append(float(monofilecontent[line][5]))
+
             photonenergy.append(float(monofilecontent[line][3]))
+
+            try:
+                photocurrent.append(float(monofilecontent[line][5]))
+            except:
+                if line == 0:
+                    with open("___ERROOOR_no-photocurrent.txt", "w") as file:
+                        file.write("this measurement had no photocurrent values that could be transformed from the string in the monofile text file into a floating number here in the code... maybe the diode was not connected to the keithley?!")
+                        file.write("\n")
+                        file.write("or the keithley range was not chosen correct and just some values were wrong.")
+                        file.write("check folder -data_export- and the photocurrent over energy file. these values are directly from the mono file. BUT: the normalization of the spectrum was now done with every photocurrent value as 1")
+                for exceptionline in range(monofilecontent.__len__()):
+                    photocurrent.append(1)
+                    photonenergy.append(float(monofilecontent[exceptionline][3]))
+                break
+
+
 
         #print('photocurrent:', photocurrent)
 
