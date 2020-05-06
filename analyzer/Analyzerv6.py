@@ -1001,7 +1001,7 @@ class Doanalysis():
             except:
                 if line == 0:
                     with open("___ERROOOR_no-photocurrent.txt", "w") as file:
-                        file.write("this measurement had no photocurrent values that could be transformed from the string in the monofile text file into a floating number here in the code... maybe the diode was not connected to the keithley?!")
+                        file.write("this measurement had no photocurrent values that could be converted from the string in the monofile text file into a floating number here in the code... maybe the diode was not connected to the keithley?!")
                         file.write("\n")
                         file.write("or the keithley range was not chosen correct and just some values were wrong.")
                         file.write("check folder -data_export- and the photocurrent over energy file. these values are directly from the mono file. BUT: the normalization of the spectrum was now done with every photocurrent value as 1")
@@ -1072,7 +1072,7 @@ class Doanalysis():
         return calibratedmass
 
     def findmassaxis(self, summedmassspec, masscalibparameters, timebase):
-        #print('#### here we are mass axis party')
+        print('we are now converting the channel numbers (x-axis) to the mass axis (def findmassaxis())')
         #print('xaxischannellength:\t')
         #print(summedmassspec.__len__())
         massaxis = []
@@ -1088,10 +1088,15 @@ class Doanalysis():
     def exportmassspecandspectrum(self, summedmassspec, threshold, plotselectedpeakchannel,
                                   plotselectedpeaksummedmassspec, spectrum, monofilecontent, workingdirectorypath,
                                   datafoldername, analysisfolderpath, peaknumberchannels, masscalibparameters,
-                                  untergrundboundaries, massaxis, monofilemetacontent, timebase, parentdirectorypath):
+                                  untergrundboundaries, massaxis, monofilemetacontent, timebase, parentdirectorypath, useoldfileformat):
+
+
 
         print('\n\n-- starting export of data --')
         print('\texporting absorption spectra in .txt files')
+
+
+
         if spectrum.__len__() == 0:
             with open('_ERROOOR.txt', 'a') as file:
                 file.write('there is an empty list of sprectra. probably no peaks were found (decrease sensitivity?)\n')
@@ -1659,7 +1664,8 @@ class Doanalysis():
 
         print('\n\nstart reading Monofile, then Background, then the Data')
 
-        monofilecontent, monofilemetacontent = self.readmonofile2(self, workingdirectorypath, datafoldername)
+        if useoldfileformat == False:
+            monofilecontent, monofilemetacontent = self.readmonofile2(self, workingdirectorypath, datafoldername)
 
         Logfile.writelog(Logfile, parentdirectorypath, 'monofilecontent read,\tnext step: read backgroundfile')
 
@@ -1679,6 +1685,7 @@ class Doanalysis():
                                                               datafoldername, analysisfolderpath, progressbarfolder,
                                                               datalengthlimit, parentdirectorypath)
             monofilecontent = readolddata.readoldmonofile(self, workingdirectorypath, datafoldername, parentdirectorypath)
+            monofilemetacontent = "this is a null string because we are using the old file format"
         else:
             print('-- start reading data --')
             bgsubstrdatalist, summedmassspec, timebase = self.readrawdatav2(self, backgrounddata, workingdirectorypath,
@@ -1718,7 +1725,7 @@ class Doanalysis():
         self.exportmassspecandspectrum(self, summedmassspec, threshold, plotselectedpeakchannel,
                                        plotselectedpeaksummedmassspec, normalizedspectrum, monofilecontent,
                                        workingdirectorypath, datafoldername, analysisfolderpath, peaknumberchannels,
-                                       masscalibparameters, untergrundboundaries, massaxis, monofilemetacontent, timebase, parentdirectorypath)
+                                       masscalibparameters, untergrundboundaries, massaxis, monofilemetacontent, timebase, parentdirectorypath, useoldfileformat)
 
         Logfile.writelog(Logfile, parentdirectorypath, 'everything exported,\tfinished \n\n')
 
