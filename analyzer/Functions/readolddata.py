@@ -89,6 +89,8 @@ def readoldmonofile(self, workingdirectorypath, datafoldername, parentdirectoryp
 
     print('readoldmono_test1')
 
+    helicity = monofilecontent[0][6]
+
     monofilecontent_photocurrent = []
     monofilecontent_photonenergy = []
     for energy, content in enumerate(monofilecontent):
@@ -100,11 +102,9 @@ def readoldmonofile(self, workingdirectorypath, datafoldername, parentdirectoryp
         monofilecontent[energyindex] = [0, 0, 0, monofilecontent_photonenergy[energyindex], 0, monofilecontent_photocurrent[energyindex]]
     print('readoldmono_test3')
 
-    for energyelement in monofilecontent:
-        pass
-        #print(energyelement)
 
-    return monofilecontent
+
+    return monofilecontent, helicity
 
 # 3 and 5
 

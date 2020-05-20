@@ -722,7 +722,12 @@ class Doanalysis():
                 if line == '# LEGEND\n':
                     content = file.readlines()
 
-
+            undulator_shift = 'undetermined'
+            for elementline in content:
+                if elementline.startswith('#'):
+                    pass
+                else:
+                    undulator_shift = elementline.split('\t')[9]
 
             monofilecontent = []
             i = 0
@@ -735,7 +740,7 @@ class Doanalysis():
                         monofilecontent[i].append(elementdata)
                     i = i + 1
         print(monofilecontent[0])
-        return monofilecontent, monofilemetacontent
+        return monofilecontent, monofilemetacontent, undulator_shift
 
     def readbackground(self, workingdirectorypath, datafoldername, analysisfolderpath, parentdirectorypath):
 
@@ -1088,7 +1093,7 @@ class Doanalysis():
     def exportmassspecandspectrum(self, summedmassspec, threshold, plotselectedpeakchannel,
                                   plotselectedpeaksummedmassspec, spectrum, monofilecontent, workingdirectorypath,
                                   datafoldername, analysisfolderpath, peaknumberchannels, masscalibparameters,
-                                  untergrundboundaries, massaxis, monofilemetacontent, timebase, parentdirectorypath, useoldfileformat):
+                                  untergrundboundaries, massaxis, monofilemetacontent, timebase, parentdirectorypath, useoldfileformat, undulator_shift):
 
 
 
@@ -1574,6 +1579,7 @@ class Doanalysis():
 
         try:
             with open('_' + datafoldername + '_metadata.txt', 'a') as file:
+                file.write(undulator_shift + '\n')
                 file.write(analysisfolderpath + '\n')
                 file.write(datafoldername + '\n\n')
                 file.write('#absolute datetime of aqcuisition = ' + monofilecontent[0][1] + '\n')
@@ -1665,7 +1671,7 @@ class Doanalysis():
         print('\n\nstart reading Monofile, then Background, then the Data')
 
         if useoldfileformat == False:
-            monofilecontent, monofilemetacontent = self.readmonofile2(self, workingdirectorypath, datafoldername)
+            monofilecontent, monofilemetacontent, undulator_shift = self.readmonofile2(self, workingdirectorypath, datafoldername)
 
         Logfile.writelog(Logfile, parentdirectorypath, 'monofilecontent read,\tnext step: read backgroundfile')
 
@@ -1684,8 +1690,8 @@ class Doanalysis():
             bgsubstrdatalist, summedmassspec, timebase = readolddata.readolddata(self, backgrounddata, workingdirectorypath,
                                                               datafoldername, analysisfolderpath, progressbarfolder,
                                                               datalengthlimit, parentdirectorypath)
-            monofilecontent = readolddata.readoldmonofile(self, workingdirectorypath, datafoldername, parentdirectorypath)
-            monofilemetacontent = "this is a null string because we are using the old file format"
+            monofilecontent, undulator_shift = readolddata.readoldmonofile(self, workingdirectorypath, datafoldername, parentdirectorypath)
+            monofilemetacontent = str(undulator_shift)
         else:
             print('-- start reading data --')
             bgsubstrdatalist, summedmassspec, timebase = self.readrawdatav2(self, backgrounddata, workingdirectorypath,
@@ -1725,7 +1731,7 @@ class Doanalysis():
         self.exportmassspecandspectrum(self, summedmassspec, threshold, plotselectedpeakchannel,
                                        plotselectedpeaksummedmassspec, normalizedspectrum, monofilecontent,
                                        workingdirectorypath, datafoldername, analysisfolderpath, peaknumberchannels,
-                                       masscalibparameters, untergrundboundaries, massaxis, monofilemetacontent, timebase, parentdirectorypath, useoldfileformat)
+                                       masscalibparameters, untergrundboundaries, massaxis, monofilemetacontent, timebase, parentdirectorypath, useoldfileformat, undulator_shift)
 
         Logfile.writelog(Logfile, parentdirectorypath, 'everything exported,\tfinished \n\n')
 
