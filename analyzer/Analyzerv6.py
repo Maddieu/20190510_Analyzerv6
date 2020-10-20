@@ -25,7 +25,7 @@ from Functions import readolddata
 parentdirectorypath = r"D:\Put\Path\To\_001,_002\Folders\Here"
 
 
-versiondate = r"27.04.2020"
+versiondate = r"20.10.2020"
 
 #       For new installation:
 #               Import / Install the following modules:
