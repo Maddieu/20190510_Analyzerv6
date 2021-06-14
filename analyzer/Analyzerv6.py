@@ -1,9 +1,12 @@
 import sys
 import os
+from os.path import expanduser
 import shutil
 import time
 import inspect
 from PyQt5.QtWidgets import *
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from mpl_toolkits.mplot3d import Axes3D
@@ -12,6 +15,8 @@ import numpy as np
 import psutil
 import gc
 from datetime import datetime, timedelta
+from pathlib import Path
+
 
 
 from Functions import readolddata
@@ -22,11 +27,13 @@ from Functions import readolddata
 #parentdirectorypath = "D:\\Martin\\Messdaten\\20191202_Pyridine_ESI\\exp_python_test"
 #parentdirectorypath = "D:\\Martin\\Messdaten\\20191202_Pyridine_ESI\\exp_python_test\\test"
 
-parentdirectorypath = r"D:\Put\Path\To\_001,_002\Folders\Here"
+# parentdirectorypath = expanduser('~')
+#r"D:\Put\Path\To\_001,_002\Folders\Here"
+# path = Path(str_path)
 
 
 versiondate = r"20.10.2020"
-
+version=6.1
 #       For new installation:
 #               Import / Install the following modules:
 #                           PyQt5           matplotlib          numpy           psutil
@@ -140,7 +147,7 @@ GaAsPhotodiode = [
 
 class Logfile():
     def writelog(self, parentdirectorypath, transportstring):
-        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+        with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
             logfile.write(time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                 psutil.virtual_memory()) + '\t' + transportstring + '\n')
 
@@ -148,46 +155,56 @@ class Logfile():
 class Fenster(QWidget):
     def __init__(self):
         super().__init__()
+        self.parent_dir = expanduser('~')
         self.initMe()
         # QThread.__init__(self)
 
     def initMe(self):
-
+        # Setting Window geometry
         width = 1000
         height = 500
         self.setGeometry(300, 100, width, height)
-        self.setWindowTitle('My First GUI')
+        self.setWindowTitle('NanoTrap Analyzer v' + str(version))
 
+        # Setting up Exit Button
         self.exitbutton = QPushButton('Exit', self)
         self.exitbutton.move(width - 170, height - 70)
         self.exitbutton.setFixedSize(150, 50)
         self.exitbutton.clicked.connect(self.beenden)
 
+        # Printing version date
         self.labelversiondate = QLabel("version date: " + versiondate, self)
         self.labelversiondate.move(5, 5)
 
+        # Setting up label for Parent Folder Text input
         self.labelfolderline = QLabel("Path to the single (_001, _002, _003, ...) data-folders. Have To be clean. No \"_output\" etc", self)
         self.labelfolderline.move(50, 35)
 
-        self.folderline = QLineEdit(parentdirectorypath, self)
+        # Setting up Parent Folder Text input
+        self.folderline = QLineEdit(self.parent_dir, self)
         self.folderline.move(50, 50)
         self.folderline.setFixedSize(700, 30)
         folderlinefont = self.folderline.font()
         folderlinefont.setPointSize(12)
         self.folderline.setFont(folderlinefont)
 
+        # Setting up label progress bar read files
         self.labelprogressbarfolder = QLabel("Progress: read files", self)
         self.labelprogressbarfolder.move(50, 350)
 
+        # Setting up read files progress bar
         self.progressbarfolder = QProgressBar(self)
         self.progressbarfolder.setGeometry(150, 350, 300, 20)
 
+        # Setting up overall progress bar label
         self.labelprogressbaroverall = QLabel("Progress: overall", self)
         self.labelprogressbaroverall.move(50, 400)
 
+        # Setting up overall progress bar
         self.progressbaroverall = QProgressBar(self)
         self.progressbaroverall.setGeometry(150, 400, 300, 20)
 
+        # Setting up Buttons to check for Untergrund file
         self.checkfoldersbutton = QPushButton('Check if Folders have "_Untergrund.dat" File', self)
         #self.checkfoldersbutton.setStyleSheet("background-color: rgb(255, 204, 102)")
         self.checkfoldersbutton.setStyleSheet("background-color: rgb(199, 199, 199)")
@@ -201,18 +218,39 @@ class Fenster(QWidget):
 
         self.deleteundergroundfolders.clicked.connect(self.deleteundergroundfoldersmethod)
 
+        # Setting up buttons to delete output folders
+
         self.deleteoutputfolderbutton = QPushButton('Delete Output Folders', self)
         self.deleteoutputfolderbutton.move(250, 250)
         #self.deleteoutputfolderbutton.setStyleSheet("background-color: rgb(102, 153, 255)")
         self.deleteoutputfolderbutton.setStyleSheet("background-color: rgb(199, 199, 199)")
         self.deleteoutputfolderbutton.clicked.connect(self.deleteoutputfolder)
 
+        # Setting up Button to Start analysis
         self.analysisbutton = QPushButton('Do Analysis', self)
         self.analysisbutton.move(50, 100)
         self.analysisbutton.setFixedSize(150, 50)
         self.analysisbutton.setStyleSheet("background-color: rgb(51, 204, 51)")
 
         self.analysisbutton.clicked.connect(self.dotheanalysis)
+        #self.analysisbutton.clicked.connect(self.do_analysis_v2)
+
+
+        #self.analysisbutton = QPushButton('Do Analysis', self)
+        #self.analysisbutton.move(50, 100)
+        #self.analysisbutton.setFixedSize(150, 50)
+        #self.analysisbutton.setStyleSheet("background-color: rgb(51, 204, 51)")
+
+        #self.analysisbutton.clicked.connect(self.dotheanalysis)
+
+        # Browse Folder Button Element
+        self.BrowseFolderButton = QPushButton('Browse', self)
+        self.BrowseFolderButton.move(800, 40)
+        self.BrowseFolderButton.setFixedSize(150, 50)
+        self.BrowseFolderButton.setStyleSheet("background-color: rgb(51, 204, 51)")
+
+        # Browse Folder Button Event call
+        self.BrowseFolderButton.clicked.connect(self.BrowseFolder)
 
         global settingsareaheight
         settingsareaheight = 100
@@ -405,27 +443,25 @@ class Fenster(QWidget):
         QCoreApplication.instance().quit()
 
     def deleteoutputfolder(self):
-        print('20190325_1602test')
-        directorytoworkin = str(self.folderline.text())
-
-        for folder in os.listdir(directorytoworkin):
+        work_dir = self.parent_dir
+        for folder in os.listdir(work_dir):
             if folder.startswith('_output'):
-                # print('output folder detected and deleted:', folder)
-                shutil.rmtree(directorytoworkin + '\\' + folder)
+                print('output folder detected and deleted:', folder)
+                shutil.rmtree(work_dir + os.sep + folder)
 
     def deleteundergroundfoldersmethod(self):
-        directorytoworkin = str(self.folderline.text())
+        directorytoworkin = str(self.folderline.text)
         alluntergrundfilespresent = 0
 
         try:
-            os.remove(directorytoworkin + "\\_analyzerlogfile.txt")
+            os.remove(directorytoworkin + os.sep + "analyzerlogfile.txt")
         except:
             pass
 
         for folder in os.listdir(directorytoworkin):
-            workingdirectorypath = str(directorytoworkin + '\\' + folder)
-            datafoldername = str(workingdirectorypath.split('\\')[-1])
-            untergrundfilename = workingdirectorypath + '\\' + datafoldername + '_Untergrund.dat'
+            workingdirectorypath = str(directorytoworkin + os.sep + folder)
+            datafoldername = str(workingdirectorypath.split(os.sep)[-1])
+            untergrundfilename = workingdirectorypath + os.sep + datafoldername + '_Untergrund.dat'
             if not os.path.isfile(untergrundfilename):
                 print('no _Untergrund.dat file in folder:\t', workingdirectorypath, '\tdeleting this folder...')
                 shutil.rmtree(workingdirectorypath)
@@ -566,9 +602,29 @@ class Fenster(QWidget):
 
         return setofdata
 
+    def do_analysis_v2(self):
+        allfolders = []
+        print(self.parent_dir)
+        for folder in os.listdir(self.parent_dir):
+            if not folder.startswith('_output'):
+                allfolders.append(folder)
+        try:
+            allfolders.remove('analyzerlogfile.txt')
+        except:
+            pass
+
+        for folder in allfolders:
+            work_dir = str(self.parent_dir + os.sep + folder)
+            data_dir = str(work_dir.split(os.sep)[-1])
+            ana_dir = str(work_dir.replace(data_dir, '_output_' + data_dir))
+            print('directory we are working in:', work_dir)
+            print('data folder name:', data_dir)
+            print('analysis folder path:', ana_dir)
+            print('parent directory: ', self.parent_dir)
+            Doanalysis.dosomething(Doanalysis, work_dir, data_dir, ana_dir, self.progressbarfolder, settingpackage, useoldfileformat, self.parent_dir)
+
+
     def dotheanalysis(self):
-
-
         if self.checkboxantiquefileformat.isChecked():
             useoldfileformat = True
         else:
@@ -587,7 +643,7 @@ class Fenster(QWidget):
             'the Program is running and might freeze and not respond\n nevertheless it will continue working, if there\'s a problem, it will just crash \nand you will never see it again (unless you fix the problem and start it again)')
 
         # doanalysis.setworkfolder(self)
-        parentdirectorypath = str(self.folderline.text())
+        #parentdirectorypath = str(self.folderline.text)
 
         settingpackage = self.readfrominputfields()
 
@@ -601,36 +657,37 @@ class Fenster(QWidget):
         self.progressbaroverall.setValue(0)
 
         allfolders = []
-        for folder in os.listdir(parentdirectorypath):
-            allfolders.append(folder)
+        for folder in os.listdir(self.parent_dir):
+            if not folder.startswith('_output'):
+                allfolders.append(folder)
         try:
-            allfolders.remove('_analyzerlogfile.txt')
+            allfolders.remove('analyzerlogfile.txt')
         except:
             pass
 
         for folder in allfolders:
-            workingdirectorypath = str(parentdirectorypath + '\\' + folder)
-            datafoldername = str(workingdirectorypath.split('\\')[-1])
-            analysisfolderpath = str(workingdirectorypath.replace(datafoldername, '_output_' + datafoldername))
-            print('directory we are working in:', workingdirectorypath)
+            print('folder: ', folder)
+            work_dir = str(self.parent_dir + os.sep + folder)
+            data_dir= str(work_dir.split(os.sep)[-1])
+            ana_dir = str(work_dir.replace(data_dir, '_output_' + data_dir))
             try:
-                Doanalysis.dosomething(Doanalysis, workingdirectorypath, datafoldername, analysisfolderpath,
-                                       self.progressbarfolder, settingpackage, useoldfileformat, parentdirectorypath)
+                Doanalysis.dosomething(Doanalysis, work_dir, data_dir, ana_dir,
+                                       self.progressbarfolder, settingpackage, useoldfileformat, self.parent_dir)
             except:
                 errorcode = sys.exc_info()
                 print("Unexpected error:", errorcode)
                 try:
-                    with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+                    with open(self.parent_dir + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
                         logfile.write(
                             time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                                 psutil.virtual_memory()) + '\n\n\t' + str(errorcode) + '\n\n\n')
                 except:
                     print('ERROR TWO:', sys.exc_info())
 
-            self.progressbaroverall.setValue((allfolders.index(folder) + 1) / allfolders.__len__() * 100)
+            self.progressbaroverall.setValue(round((allfolders.index(folder) + 1) / allfolders.__len__() * 100))
             qApp.processEvents()
 
-        self.finishedeventprocedure(parentdirectorypath)
+        self.finishedeventprocedure(self.parent_dir)
 
     def finishedeventprocedure(self, parentdirectorypath):
         finishedeventfont = self.finishedevent.font()
@@ -646,13 +703,22 @@ class Fenster(QWidget):
         #except:
         #    print('Error copying analyzer file:', sys.exc_info())
 
+    # Action when BrowseFolderButton clicked
+    def BrowseFolder(self):
+        self.folderline.text = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder', expanduser('~'))
+        self.parent_dir = self.folderline.text
+        self.folderline.setText(self.parent_dir)
+        # print(parentdirectorypath)
+
+
     def checkfolders(self):
-        directorytoworkin = str(self.folderline.text())
+        directorytoworkin = str(self.folderline.text)
         alluntergrundfilespresent = 0
         for folder in os.listdir(directorytoworkin):
-            workingdirectorypath = str(directorytoworkin + '\\' + folder)
-            datafoldername = str(workingdirectorypath.split('\\')[-1])
-            untergrundfilename = workingdirectorypath + '\\' + datafoldername + '_Untergrund.dat'
+            workingdirectorypath = str(directorytoworkin + os.sep + folder)
+            datafoldername = str(workingdirectorypath.split(os.sep)[-1])
+            print(str(workingdirectorypath.split(os.sep)[-1]))
+            untergrundfilename = workingdirectorypath + os.sep + datafoldername + '_Untergrund.dat'
             if not os.path.isfile(untergrundfilename):
                 print('no _Untergrund.dat file in folder:\t', workingdirectorypath)
                 alluntergrundfilespresent = alluntergrundfilespresent + 1
@@ -744,21 +810,21 @@ class Doanalysis():
 
     def readbackground(self, workingdirectorypath, datafoldername, analysisfolderpath, parentdirectorypath):
 
-        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+        with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
             logfile.write(
                 time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                     psutil.virtual_memory()) + '\t\tin readbackground next step: chdir\t\n')
 
         os.chdir(workingdirectorypath)
 
-        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+        with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
             logfile.write(
                 time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                     psutil.virtual_memory()) + '\t\tin readbackground next step: create emptylist bgdata\t\n')
 
         backgrounddata = []
 
-        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+        with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
             logfile.write(
                 time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                     psutil.virtual_memory()) + '\t\tin readbackground next step: read _Untergrund.dat\t\n')
@@ -769,25 +835,38 @@ class Doanalysis():
                 if not line.startswith('#'):
                     backgrounddata.append(line.replace('\n', ""))
 
-        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+        with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
             logfile.write(
                 time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                     psutil.virtual_memory()) + '\t\tin readbackground next step: return bgdata\t\n')
 
         return backgrounddata
 
-    def readrawdatav2(self, backgrounddata, workingdirectorypath, datafoldername, analysisfolderpath, progressbarfolder,
-                      datalengthlimit, parentdirectorypath):
+    # BEGIN read_raw_data_v3
+    def read_raw_data_v3(self, parent_dir):
+        filelist = []
+        for file in os.listdir(parent_dir):
+            filelist.append(file)
+
+    # END read_raw_data_v3
+
+    # BEGIN readrawdatav2
+    def readrawdatav2(self, backgrounddata, work_dir, data_dir, ana_dir, progressbarfolder,
+                      datalengthlimit, parent_dir):
         filelist = []
         bgsubstrdatalist = []
         summedmassspec = []
-        for file in os.listdir(workingdirectorypath):
+        print('data dir', data_dir)
+        print('work dir', work_dir)
+        for file in os.listdir(work_dir):
             filelist.append(file)
-        for element in range(1, filelist.__len__() - 1):
+        print(filelist)
+        print(len(filelist))
+        for element in range(1, filelist.__len__() - 2):
             bgsubstrdatalist.append([])
 
-            with open(datafoldername + '_' + str(element).zfill(3) + '.dat', 'r', encoding="cp1252") as file:
-                print('\topen file: ', datafoldername + '_' + str(element).zfill(3) + '.dat of insgesamt',
+            with open(data_dir + '_' + str(element).zfill(3) + '.dat', 'r', encoding="cp1252") as file:
+                print('\topen file: ', data_dir + '_' + str(element).zfill(3) + '.dat of total',
                       filelist.__len__() - 2)
                 #print('readrawdatav2, element:', element, '\t\ttotal number of files:', filelist.__len__() - 2)
                 progressbarfolder.setValue(round(element / (filelist.__len__() - 2) * 100))
@@ -829,9 +908,7 @@ class Doanalysis():
 
         return bgsubstrdatalist, summedmassspec, timebase
 
-
-
-
+    # END raedatav2
     def backgroundsubstraction(self, rawdatalist, backgrounddata):
         bglist = []
         for scannumbers in range(rawdatalist.__len__()):
@@ -1113,7 +1190,7 @@ class Doanalysis():
             os.mkdir('data_export')
             os.chdir('data_export')
 
-            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                         psutil.virtual_memory()) + '\t\tin export next step: export spectra for all peaks\t\n')
@@ -1139,7 +1216,7 @@ class Doanalysis():
             os.mkdir('massspec_export')
             os.chdir('massspec_export')
 
-            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                         psutil.virtual_memory()) + '\t\tin export next step: export MS overall sum\t\n')
@@ -1150,7 +1227,7 @@ class Doanalysis():
                 for channel in range(summedmassspec.__len__()):
                     file.write(str(massaxis[channel]) + '\t' + str(summedmassspec[channel]) + '\n')
 
-            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                         psutil.virtual_memory()) + '\t\tin export next step: export global channel list, which peaks contribute\t\n')
@@ -1161,7 +1238,7 @@ class Doanalysis():
                 for channel in range(plotselectedpeakchannel.__len__()):
                     file.write(str(plotselectedpeakchannel[channel]) + '\n')
 
-            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                         psutil.virtual_memory()) + '\t\tin export next step: create channel list for individual peaks\t\n')
@@ -1189,7 +1266,7 @@ class Doanalysis():
 
             os.chdir('..')
 
-            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                         psutil.virtual_memory()) + '\t\tin export next step: read the photonenergy out of mono file\t\n')
@@ -1198,7 +1275,7 @@ class Doanalysis():
             for monofileline in monofilecontent:
                 photonenergy.append(float(monofileline[3]))
 
-            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime(
                         "%d.%m.%Y %H:%M:%S") + '\t' + str(
@@ -1225,7 +1302,7 @@ class Doanalysis():
 
             # export summed up absorption spectrum .txt      20190510
 
-            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                         psutil.virtual_memory()) + '\t\tin export next step: plot image: sum over all fragments txt and png\t\n')
@@ -1255,7 +1332,7 @@ class Doanalysis():
             del tempspec
 
 
-            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                         psutil.virtual_memory()) + '\t\tin export next step: plot image: one spectrum for each peak\t\n')
@@ -1283,7 +1360,7 @@ class Doanalysis():
                 plt.close()
                 gc.collect()
 
-            with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+            with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
                 logfile.write(
                     time.strftime(
                         "%d.%m.%Y %H:%M:%S") + '\t' + str(
@@ -1397,7 +1474,7 @@ class Doanalysis():
                 with open('___ERROR.txt', 'a') as file:
                     file.write('couldn\'t print low res overview mass spec\n')
 
-        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+        with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
             logfile.write(
                 time.strftime(
                     "%d.%m.%Y %H:%M:%S") + '\t' + str(
@@ -1500,7 +1577,7 @@ class Doanalysis():
 
         #print('writing log before Untergrund')
 
-        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+        with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
             logfile.write(
                 time.strftime(
                     "%d.%m.%Y %H:%M:%S") + '\t' + str(
@@ -1572,7 +1649,7 @@ class Doanalysis():
                     file.write('couldn\'t print low res mass spec with Untergrund Area\n')
             # plt.legend(i)
 
-        with open(parentdirectorypath + '\\_analyzerlogfile.txt', 'a') as logfile:
+        with open(parentdirectorypath + os.sep + 'analyzerlogfile.txt', 'a') as logfile:
             logfile.write(
                 time.strftime("%d.%m.%Y %H:%M:%S") + '\t' + str(
                     psutil.virtual_memory()) + '\t\tin export next step: export meta data and photo current curve\t\n')
@@ -1647,7 +1724,7 @@ class Doanalysis():
 
         return [masscalibfitparameters[0], masscalibfitparameters[1], masscalibfitparameters[2]]
 
-    def dosomething(self, workingdirectorypath, datafoldername, analysisfolderpath, progressbarfolder, settingpackage, useoldfileformat, parentdirectorypath):
+    def dosomething(self, work_dir, data_dir, ana_dir, progressbarfolder, settingpackage, useoldfileformat, parent_dir):
 
         [datalengthlimit, thresholdfactor, minbroadnessofpeak, peakbroadnesstolerance,
          masscalib1mass, masscalib1time, masscalib2mass, masscalib2time,
@@ -1657,27 +1734,30 @@ class Doanalysis():
         untergrundboundaries = [untergrundlowerboundary, untergrundupperboundary]
 
         print('Parameters for the sensitivity and mass calibration and background and so on:', settingpackage)
+        print('parentdirectorypath:',parent_dir)
+        print('analysisfolderpath:', ana_dir)
+        print('datafodlername:', data_dir)
+        print('work dir:', work_dir)
+        Logfile.writelog(Logfile, parent_dir, 'start working in folder: ' + ana_dir + os.sep + data_dir)
 
-        Logfile.writelog(Logfile, parentdirectorypath, 'start working in folder: ' + analysisfolderpath + '\\' + datafoldername)
+        Logfile.writelog(Logfile, parent_dir, "[datalengthlimit, thresholdfactor, minbroadnessofpeak, peakbroadnesstolerance, masscalib1mass, masscalib1time, masscalib2mass, masscalib2time, untergrundlowerboundary, untergrundupperboundary]" + str(settingpackage))
 
-        Logfile.writelog(Logfile, parentdirectorypath, "[datalengthlimit, thresholdfactor, minbroadnessofpeak, peakbroadnesstolerance, masscalib1mass, masscalib1time, masscalib2mass, masscalib2time, untergrundlowerboundary, untergrundupperboundary]" + str(settingpackage))
+        Logfile.writelog(Logfile, parent_dir, 'analysis button pressed,\tnext step: create analysis folder')
 
-        Logfile.writelog(Logfile, parentdirectorypath, 'analysis button pressed,\tnext step: createanalysis folder')
+        self.createanalysisfolder(self, work_dir, data_dir, ana_dir)
 
-        self.createanalysisfolder(self, workingdirectorypath, datafoldername, analysisfolderpath)
-
-        Logfile.writelog(Logfile, parentdirectorypath, 'analysis folder created,\tnext step: read monofilecontent')
+        Logfile.writelog(Logfile, parent_dir, 'analysis folder created,\tnext step: read monofilecontent')
 
         print('\n\nstart reading Monofile, then Background, then the Data')
 
         if useoldfileformat == False:
-            monofilecontent, monofilemetacontent, undulator_shift = self.readmonofile2(self, workingdirectorypath, datafoldername)
+            monofilecontent, monofilemetacontent, undulator_shift = self.readmonofile2(self, work_dir, data_dir)
 
-        Logfile.writelog(Logfile, parentdirectorypath, 'monofilecontent read,\tnext step: read backgroundfile')
+        Logfile.writelog(Logfile, parent_dir, 'monofilecontent read,\tnext step: read backgroundfile')
 
-        backgrounddata = self.readbackground(self, workingdirectorypath, datafoldername, analysisfolderpath, parentdirectorypath)
+        backgrounddata = self.readbackground(self, work_dir, data_dir, ana_dir, parent_dir)
 
-        Logfile.writelog(Logfile, parentdirectorypath, 'bg data read,\tnext step: big read data v2 procedure')
+        Logfile.writelog(Logfile, parent_dir, 'bg data read,\tnext step: big read data v2 procedure')
 
         #olddata = True
 
@@ -1685,55 +1765,55 @@ class Doanalysis():
         if useoldfileformat == True:
             print('-- READ OLD DATA --')
 
-            backgrounddata = readolddata.readoldbackground(self, workingdirectorypath, datafoldername, analysisfolderpath, parentdirectorypath)
+            backgrounddata = readolddata.readoldbackground(self, work_dir, data_dir, ana_dir, parent_dir)
 
-            bgsubstrdatalist, summedmassspec, timebase = readolddata.readolddata(self, backgrounddata, workingdirectorypath,
-                                                              datafoldername, analysisfolderpath, progressbarfolder,
-                                                              datalengthlimit, parentdirectorypath)
-            monofilecontent, undulator_shift = readolddata.readoldmonofile(self, workingdirectorypath, datafoldername, parentdirectorypath)
+            bgsubstrdatalist, summedmassspec, timebase = readolddata.readolddata(self, backgrounddata, work_dir,
+                                                              data_dir, ana_dir, progressbarfolder,
+                                                              datalengthlimit, parent_dir)
+            monofilecontent, undulator_shift = readolddata.readoldmonofile(self, work_dir, data_dir, parent_dir)
             monofilemetacontent = str(undulator_shift)
         else:
             print('-- start reading data --')
-            bgsubstrdatalist, summedmassspec, timebase = self.readrawdatav2(self, backgrounddata, workingdirectorypath,
-                                                              datafoldername, analysisfolderpath, progressbarfolder,
-                                                              datalengthlimit, parentdirectorypath)
+            bgsubstrdatalist, summedmassspec, timebase = self.readrawdatav2(self, backgrounddata, work_dir,
+                                                              data_dir, ana_dir, progressbarfolder,
+                                                              datalengthlimit, parent_dir)
 
-        Logfile.writelog(Logfile, parentdirectorypath, 'readrawdatav2 success,\tnext step: calc threshold')
+        Logfile.writelog(Logfile, parent_dir, 'readrawdatav2 success,\tnext step: calc threshold')
 
-        threshold = self.detectthreshold(self, summedmassspec, thresholdfactor, analysisfolderpath)
+        threshold = self.detectthreshold(self, summedmassspec, thresholdfactor, ana_dir)
 
-        Logfile.writelog(Logfile, parentdirectorypath, 'threshold success,\tnext step: find peak channels')
+        Logfile.writelog(Logfile, parent_dir, 'threshold success,\tnext step: find peak channels')
 
         peakchannels = self.findpeakpositions(self, summedmassspec, threshold, minbroadnessofpeak)
 
-        Logfile.writelog(Logfile, parentdirectorypath, 'peak channels found,\tnext step: count as peak numbers')
+        Logfile.writelog(Logfile, parent_dir, 'peak channels found,\tnext step: count as peak numbers')
 
         peaknumberchannels, plotselectedpeakchannel, plotselectedpeaksummedmassspec = self.definepeaknumber(self,
                                                                                                             summedmassspec,
                                                                                                             peakchannels,
                                                                                                             peakbroadnesstolerance)
 
-        Logfile.writelog(Logfile, parentdirectorypath, 'peak numbers assigned,\tnext step: calculate raw spectra')
+        Logfile.writelog(Logfile, parent_dir, 'peak numbers assigned,\tnext step: calculate raw spectra')
 
         spectrum = self.calculatespectrum(self, peaknumberchannels, bgsubstrdatalist, untergrundboundaries)
 
-        Logfile.writelog(Logfile, parentdirectorypath, 'raw spectrum calculated,\tnext step: normalized with photon flux')
+        Logfile.writelog(Logfile, parent_dir, 'raw spectrum calculated,\tnext step: normalized with photon flux')
 
         normalizedspectrum = self.normalizespectrum(self, spectrum, monofilecontent)
 
-        Logfile.writelog(Logfile, parentdirectorypath, 'success spectra-normalization,\tnext step: export everything')
+        Logfile.writelog(Logfile, parent_dir, 'success spectra-normalization,\tnext step: export everything')
 
-        masscalibparameters = self.transformchannelsinmass(self, masscalibvalues, timebase, parentdirectorypath)
+        masscalibparameters = self.transformchannelsinmass(self, masscalibvalues, timebase, parent_dir)
 
         #print(masscalibparameters)
         massaxis = self.findmassaxis(self, summedmassspec, masscalibparameters, timebase)
 
         self.exportmassspecandspectrum(self, summedmassspec, threshold, plotselectedpeakchannel,
                                        plotselectedpeaksummedmassspec, normalizedspectrum, monofilecontent,
-                                       workingdirectorypath, datafoldername, analysisfolderpath, peaknumberchannels,
-                                       masscalibparameters, untergrundboundaries, massaxis, monofilemetacontent, timebase, parentdirectorypath, useoldfileformat, undulator_shift)
+                                       work_dir, data_dir, ana_dir, peaknumberchannels,
+                                       masscalibparameters, untergrundboundaries, massaxis, monofilemetacontent, timebase, parent_dir, useoldfileformat, undulator_shift)
 
-        Logfile.writelog(Logfile, parentdirectorypath, 'everything exported,\tfinished \n\n')
+        Logfile.writelog(Logfile, parent_dir, 'everything exported,\tfinished \n\n')
 
         print('\ndid stuff...')
         del spectrum, normalizedspectrum, peaknumberchannels, plotselectedpeakchannel, plotselectedpeaksummedmassspec, peakchannels, threshold, bgsubstrdatalist, summedmassspec, backgrounddata, monofilecontent
