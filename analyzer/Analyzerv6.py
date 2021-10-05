@@ -879,7 +879,7 @@ class Doanalysis():
             filelist.append(file)
         print(filelist)
         print(len(filelist))
-        for element in range(1, filelist.__len__() - 2):
+        for element in range(1, filelist.__len__() - 2 + 1):
             bgsubstrdatalist.append([])
 
             with open(data_dir + '_' + str(element).zfill(3) + '.dat', 'r', encoding="cp1252") as file:
