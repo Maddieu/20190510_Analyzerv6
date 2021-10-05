@@ -30,10 +30,11 @@ from Functions import readolddata
 # parentdirectorypath = expanduser('~')
 #r"D:\Put\Path\To\_001,_002\Folders\Here"
 # path = Path(str_path)
+default_parent_dir = expanduser('~') + os.sep + os.sep.join(['Put', 'Path', 'To', 'DataFolder', 'Here', 'Or', 'Use', 'BrowseButton'])
 
 
-versiondate = r"20.10.2020"
-version=6.1
+versiondate = r"05.10.2021"
+version=6.2
 #       For new installation:
 #               Import / Install the following modules:
 #                           PyQt5           matplotlib          numpy           psutil
@@ -155,7 +156,7 @@ class Logfile():
 class Fenster(QWidget):
     def __init__(self):
         super().__init__()
-        self.parent_dir = expanduser('~')
+        self.parent_dir = default_parent_dir
         self.initMe()
         # QThread.__init__(self)
 
@@ -443,14 +444,18 @@ class Fenster(QWidget):
         QCoreApplication.instance().quit()
 
     def deleteoutputfolder(self):
+        self.parent_dir = self.folderline.text()
         work_dir = self.parent_dir
+        print('deleteoutputfolder procedure started in "parent_dir":', self.parent_dir, '\tand work_dir:', work_dir)
         for folder in os.listdir(work_dir):
             if folder.startswith('_output'):
                 print('output folder detected and deleted:', folder)
                 shutil.rmtree(work_dir + os.sep + folder)
 
     def deleteundergroundfoldersmethod(self):
-        directorytoworkin = str(self.folderline.text)
+        directorytoworkin = str(self.folderline.text())
+        print('deleteundergroundfoldersmethod procedure started in "directorytoworkin":', directorytoworkin)
+
         alluntergrundfilespresent = 0
 
         try:
@@ -603,8 +608,9 @@ class Fenster(QWidget):
         return setofdata
 
     def do_analysis_v2(self):
+        self.parent_dir = self.folderline.text()
         allfolders = []
-        print(self.parent_dir)
+        print('do_analysis_v2 procedure started, "self.parent_dir" is:', self.parent_dir)
         for folder in os.listdir(self.parent_dir):
             if not folder.startswith('_output'):
                 allfolders.append(folder)
@@ -625,6 +631,10 @@ class Fenster(QWidget):
 
 
     def dotheanalysis(self):
+
+        self.parent_dir = self.folderline.text()
+        print('dotheanalysis procedure started, "self.parent_dir" is:', self.parent_dir)
+
         if self.checkboxantiquefileformat.isChecked():
             useoldfileformat = True
         else:
@@ -643,7 +653,7 @@ class Fenster(QWidget):
             'the Program is running and might freeze and not respond\n nevertheless it will continue working, if there\'s a problem, it will just crash \nand you will never see it again (unless you fix the problem and start it again)')
 
         # doanalysis.setworkfolder(self)
-        #parentdirectorypath = str(self.folderline.text)
+        #parentdirectorypath = str(self.folderline.text())
 
         settingpackage = self.readfrominputfields()
 
@@ -666,10 +676,13 @@ class Fenster(QWidget):
             pass
 
         for folder in allfolders:
-            print('folder: ', folder)
+            print('for folder in allfolders: current folder is:\t', folder)
             work_dir = str(self.parent_dir + os.sep + folder)
-            data_dir= str(work_dir.split(os.sep)[-1])
-            ana_dir = str(work_dir.replace(data_dir, '_output_' + data_dir))
+            data_dir = str(work_dir.split(os.sep)[-1])
+            ana_dir = str(self.parent_dir + os.sep + '_output_' + folder)
+            print('"work_dir" is:\t', work_dir)
+            print('"data_dir" is:\t', data_dir)
+            print('"ana_dir" is:\t', ana_dir)
             try:
                 Doanalysis.dosomething(Doanalysis, work_dir, data_dir, ana_dir,
                                        self.progressbarfolder, settingpackage, useoldfileformat, self.parent_dir)
@@ -712,16 +725,20 @@ class Fenster(QWidget):
 
 
     def checkfolders(self):
-        directorytoworkin = str(self.folderline.text)
+        directorytoworkin = str(self.folderline.text())
+        print('checkfolders procedure started in "directorytoworkin":', directorytoworkin)
         alluntergrundfilespresent = 0
         for folder in os.listdir(directorytoworkin):
             workingdirectorypath = str(directorytoworkin + os.sep + folder)
             datafoldername = str(workingdirectorypath.split(os.sep)[-1])
-            print(str(workingdirectorypath.split(os.sep)[-1]))
+            print('now looking in directory (or file): ', str(workingdirectorypath.split(os.sep)[-1]), end="")
             untergrundfilename = workingdirectorypath + os.sep + datafoldername + '_Untergrund.dat'
             if not os.path.isfile(untergrundfilename):
-                print('no _Untergrund.dat file in folder:\t', workingdirectorypath)
+                print('\t\t!! no _Untergrund.dat file in folder:\t', workingdirectorypath, '!!', end="")
                 alluntergrundfilespresent = alluntergrundfilespresent + 1
+            else:
+                print('... and found a fitting file with Untergrund-file-name', end="")
+            print()
         print('Number of errors:', alluntergrundfilespresent)
 
 
