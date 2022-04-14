@@ -1109,8 +1109,6 @@ class Doanalysis():
                     photonenergy.append(float(monofilecontent[exceptionline][3]))
                 break
 
-
-
         #print('photocurrent:', photocurrent)
 
         for i in range(photocurrent.__len__()):
