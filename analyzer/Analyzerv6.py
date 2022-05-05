@@ -33,8 +33,8 @@ from Functions import readolddata
 default_parent_dir = expanduser('~') + os.sep + os.sep.join(['Put', 'Path', 'To', 'DataFolder', 'Here', 'Or', 'Use', 'BrowseButton'])
 
 
-versiondate = r"05.10.2021"
-version=6.2
+versiondate = r"05.05.2022"
+version=6.3
 #       For new installation:
 #               Import / Install the following modules:
 #                           PyQt5           matplotlib          numpy           psutil
@@ -306,7 +306,7 @@ class Fenster(QWidget):
 
         self.labelpeakbroadnesstolerance = QLabel("Is Channel x a peak?: Tolerate dipped Channels", self)
         self.labelpeakbroadnesstolerance.setToolTip('If the intensity for one channel drops below the threshold\n'
-                                                    'how many channels have to pass before a next "peak number" is assigned,'
+                                                    'how many channels have to pass before a next "peak number" is assigned,\n'
                                                     'important if a broad peak has a drop which should not cause the beginning of a new peak number')
         self.labelpeakbroadnesstolerance.move(700, settingsareaheight + 120)
 
@@ -338,27 +338,38 @@ class Fenster(QWidget):
 
         self.labelMass = QLabel(self)
         self.labelMass.setText('Mass [amu/z]')
-        self.labelMass.move(730, settingsareaheight + 170)
+        self.labelMass.move(720, settingsareaheight + 170)
 
         self.labelTime = QLabel(self)
         self.labelTime.setText('Time Of Flight [E-5 sec]')
-        self.labelTime.move(820, settingsareaheight + 170)
+        self.labelTime.move(800, settingsareaheight + 170)
 
         self.lineeditmasscalib1mass = QLineEdit(str(masscalib1mass), self)
-        self.lineeditmasscalib1mass.move(730, settingsareaheight + 200 - 3)
+        self.lineeditmasscalib1mass.move(720, settingsareaheight + 200 - 3)
         self.lineeditmasscalib1mass.setFixedSize(45, 20)
 
         self.lineeditmasscalib1time = QLineEdit(str(masscalib1time), self)
-        self.lineeditmasscalib1time.move(820, settingsareaheight + 200 - 3)
+        self.lineeditmasscalib1time.move(800, settingsareaheight + 200 - 3)
         self.lineeditmasscalib1time.setFixedSize(60, 20)
 
         self.lineeditmasscalib2mass = QLineEdit(str(masscalib2mass), self)
-        self.lineeditmasscalib2mass.move(730, settingsareaheight + 230 - 3)
+        self.lineeditmasscalib2mass.move(720, settingsareaheight + 230 - 3)
         self.lineeditmasscalib2mass.setFixedSize(45, 20)
 
         self.lineeditmasscalib2time = QLineEdit(str(masscalib2time), self)
-        self.lineeditmasscalib2time.move(820, settingsareaheight + 230 - 3)
+        self.lineeditmasscalib2time.move(800, settingsareaheight + 230 - 3)
         self.lineeditmasscalib2time.setFixedSize(60, 20)
+
+
+        # Browse Folder Button Element
+        self.ReadMassCalibFromFileButton = QPushButton('Get Mass Calib \n from Saved MS', self)
+        self.ReadMassCalibFromFileButton.move(880, settingsareaheight + 200 - 3)
+        self.ReadMassCalibFromFileButton.setFixedSize(100, 50)
+        self.ReadMassCalibFromFileButton.setToolTip('when you don\'t have a nice mass calibration at hand\n'
+                                                    'you might have saved a mass spectrum by hand in the "Massen + X-Achse" VI\n'
+                                                    'from this file you can extract the mass calibration using this button')
+        # Browse Folder Button Event call
+        self.ReadMassCalibFromFileButton.clicked.connect(self.ReadMassCalibFromFileProcedure)
 
         #
         #
@@ -722,6 +733,25 @@ class Fenster(QWidget):
         self.parent_dir = self.folderline.text
         self.folderline.setText(self.parent_dir)
         # print(parentdirectorypath)
+
+
+    # action when ReadMassCalibFromFileButton is pressed
+    # find a file which was saved with the "Massen + X-Achse" program
+    def ReadMassCalibFromFileProcedure(self):
+        FilenameOfMassSpecWithMassCalib = QtWidgets.QFileDialog.getOpenFileName(self, 'Select actively saved mass spec from "Massen+X-Achse" program (not from scan)', expanduser('~'))[0]
+        print('getting mass calib parameters from file: ', FilenameOfMassSpecWithMassCalib)
+        if FilenameOfMassSpecWithMassCalib:
+            with open(FilenameOfMassSpecWithMassCalib, 'r') as file:
+                TempContent = file.readlines()
+                VarMassCalib1Mass = f'{(float(TempContent[5].split()[0])):.1f}'
+                VarMassCalib1Time = f'{(float(TempContent[3].split()[0]) * 1e5):.4f}'
+                VarMassCalib2Mass = f'{(float(TempContent[6].split()[0])):.1f}'
+                VarMassCalib2Time = f'{(float(TempContent[4].split()[0]) * 1e5):.4f}'
+            self.lineeditmasscalib1mass.setText(VarMassCalib1Mass)
+            self.lineeditmasscalib1time.setText(VarMassCalib1Time)
+            self.lineeditmasscalib2mass.setText(VarMassCalib2Mass)
+            self.lineeditmasscalib2time.setText(VarMassCalib2Time)
+
 
 
     def checkfolders(self):
